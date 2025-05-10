@@ -216,3 +216,10 @@
 .fade-out {
   animation: fadeOut 0.3s ease forwards;
 }
+
+
+/* Connect Wallet Button Styling */
+button.wallet-adapter-button-trigger {
+  @apply w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2 text-sm;
+}
+

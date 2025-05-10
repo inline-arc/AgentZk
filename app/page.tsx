@@ -1,8 +1,15 @@
 "use client"
 
 import type React from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import { ConnectionProvider, WalletProvider, useWallet, useConnection } from "@solana/wallet-adapter-react"
+import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui"
+import { CivicAuthProvider } from "@civic/auth-web3/react"
+import { clusterApiUrl } from "@solana/web3.js"
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets"
+import { Toaster, toast } from 'sonner'
 
-import { useState, useEffect, useRef } from "react"
+require('@solana/wallet-adapter-react-ui/styles.css')
 import {
   Search,
   Sun,
@@ -19,13 +26,106 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { FileDropArea } from "@/components/file-drop-area"
 import { ModelSelector } from "@/components/model-selector"
 import { ChatMessage } from "@/components/chat-message"
 
+// Hook to get wallet balance
+const useBalance = () => {
+  const [balance, setBalance] = useState<number>();
+  const { connection } = useConnection();
+  const { publicKey } = useWallet();
+
+  useEffect(() => {
+    if (publicKey) {
+      connection.getBalance(publicKey).then(setBalance);
+    }
+  }, [connection, publicKey]);
+
+  return balance;
+};
+
+// Component for wallet content
+const CustomWalletButton = () => {
+  const { connected, publicKey, disconnect, wallet, select, wallets } = useWallet();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <motion.div className="w-full"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <Button 
+            className="w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-6 font-medium flex items-center justify-center gap-2 text-sm border-0"
+            variant="outline"
+          >
+            {connected ? (
+              <span>Connected: {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}</span>
+            ) : (
+              <span>Connect Wallet</span>
+            )}
+          </Button>
+        </motion.div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56 bg-[#2d2936] border-[#3a3545]">
+        {!connected ? (
+          wallets.map((wallet) => (
+            <DropdownMenuItem
+              key={wallet.adapter.name}
+              className="text-white hover:bg-[#3a3545] cursor-pointer"
+              onClick={() => select(wallet.adapter.name)}
+            >
+              {wallet.adapter.name}
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <DropdownMenuItem 
+            className="text-white hover:bg-[#3a3545] cursor-pointer"
+            onClick={() => disconnect()}
+          >
+            Disconnect
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+const WalletContent = () => {
+  const balance = useBalance();
+  const { publicKey } = useWallet();
+
+  useEffect(() => {
+    if (publicKey) {
+      toast.success('Wallet Connected', {
+        description: (
+          <div className="space-y-1">
+            <p className="text-sm text-gray-300">Address: {publicKey.toString()}</p>
+            <p className="text-sm text-gray-300">Balance: {balance ? `${balance / 1e9} SOL` : "Loading..."}</p>
+          </div>
+        ),
+        duration: 5000,
+      });
+    }
+  }, [publicKey, balance]);
+
+  return null;
+};
+
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false)
+  
+  // Setup Solana wallet
+  const endpoint = useMemo(() => clusterApiUrl('devnet'), []);
+  const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
   const [showFileDropArea, setShowFileDropArea] = useState(false)
   const [message, setMessage] = useState("")
@@ -72,31 +172,10 @@ export default function Home() {
     }
   }, [messages])
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
-
-    // Add user message
-    const newMessages = [...messages, { role: "user", content: message }]
-    setMessages(newMessages)
-    setChatStarted(true)
-    setMessage("")
-
-    // Simulate assistant response after a delay
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        {
-          role: "assistant",
-          content: `This is a simulated response to: "${message}"`,
-        },
-      ])
-    }, 1000)
-  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
     }
   }
 
@@ -104,16 +183,21 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-[#1a1625]">
+      <Toaster theme="dark" position="top-right" />
       {/* Sidebar */}
-      <motion.div
-        className="fixed md:relative z-40 h-full flex flex-col border-r border-[#2d2936] bg-[#1a1625]"
-        initial={{ width: 250, x: 0 }}
-        animate={{
-          width: sidebarCollapsed ? 0 : 250,
-          x: sidebarCollapsed ? -250 : 0,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <CivicAuthProvider clientId="065b34b9-6997-4218-96bd-f5ed5cd97d09">
+              <motion.div
+                className="fixed md:relative z-40 h-full flex flex-col border-r border-[#2d2936] bg-[#1a1625]"
+                initial={{ width: 250, x: 0 }}
+                animate={{
+                  width: sidebarCollapsed ? 0 : 250,
+                  x: sidebarCollapsed ? -250 : 0,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              >
         <div className="p-6 flex items-center">
           <div className="text-purple-300 font-semibold text-lg">Sniffzk</div>
         </div>
@@ -149,15 +233,14 @@ export default function Home() {
         </div>
 
         <div className="mt-auto p-4 flex items-center justify-between text-gray-300 border-t border-[#2d2936]">
-          <motion.button
-            className="w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <span className="text-sm">Connect Wallet</span>
-          </motion.button>
+          <CustomWalletButton />
+          <WalletContent />
         </div>
-      </motion.div>
+              </motion.div>
+            </CivicAuthProvider>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative">
@@ -331,7 +414,17 @@ export default function Home() {
                   whileHover={message.trim() ? { scale: 1.05 } : {}}
                   whileTap={message.trim() ? { scale: 0.95 } : {}}
                   disabled={!message.trim()}
-                  onClick={handleSendMessage}
+                  onClick={() => {
+                    if (message.trim()) {
+                      setMessages((prev) => [...prev, { role: "user", content: message }])
+                      setMessage("")
+                      setChatStarted(true)
+                      if (textareaRef.current) {
+                        textareaRef.current.style.height = "48px"
+                        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+                      }
+                    }
+                  }}
                 >
                   <Send className="h-5 w-5" />
                 </motion.button>
