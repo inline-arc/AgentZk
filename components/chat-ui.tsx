@@ -7,6 +7,13 @@ import { useState } from "react"
 export function ChatUI() {
   const [message, setMessage] = useState("")
 
+  // Handle sending the message
+  const handleSend = () => {
+    if (!message.trim()) return
+    // TODO: Add logic to actually send the message
+    setMessage("")
+  }
+
   return (
     <>
       {/* Chat Messages Area */}
@@ -24,11 +31,23 @@ export function ChatUI() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message here..."
               className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  handleSend()
+                }
+              }}
             />
             <div className="absolute right-2 bottom-2 flex items-center">
-              <div className="flex items-center mr-2 text-sm text-purple-300">
+              <div className="flex items-center mr-2 text-sm text-purple-300 relative">
                 <span>Gemini 2.5 Flash</span>
                 <ChevronDown className="h-4 w-4 ml-1" />
+                {/* Dropdown menu */}
+                <div className="absolute top-6 left-0 bg-[#2a2235] border border-[#3a3245] rounded shadow-lg z-10 hidden group-hover:block">
+                  <button className="block px-4 py-2 text-left w-full text-purple-300 hover:bg-[#3a3245]">
+                    Update
+                  </button>
+                </div>
               </div>
               <button className="p-1 text-purple-300 bg-transparent rounded-md hover:bg-[#3a3245]">
                 <Search className="h-5 w-5" />
@@ -39,6 +58,7 @@ export function ChatUI() {
               <button
                 className={`p-1 rounded-md ${message.trim() ? "text-white bg-purple-500 hover:bg-purple-600" : "text-white bg-purple-400/30"}`}
                 disabled={!message.trim()}
+                onClick={handleSend}
               >
                 <ArrowUp className="h-5 w-5" />
               </button>

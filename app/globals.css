@@ -4,65 +4,178 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: oklch(0.98 0.00 301.43);
+    --foreground: oklch(0.37 0.03 287.08);
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: oklch(1.00 0 0);
+    --card-foreground: oklch(0.37 0.03 287.08);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: oklch(1.00 0 0);
+    --popover-foreground: oklch(0.37 0.03 287.08);
 
-    --primary: 271 76% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: oklch(0.61 0.08 299.73);
+    --primary-foreground: oklch(0.98 0.00 301.43);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: oklch(0.90 0.03 300.24);
+    --secondary-foreground: oklch(0.37 0.03 287.08);
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: oklch(0.89 0.01 299.78);
+    --muted-foreground: oklch(0.53 0.04 290.79);
 
-    --accent: 271 76% 97%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: oklch(0.79 0.08 359.94);
+    --accent-foreground: oklch(0.34 0.04 1.76);
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: oklch(0.63 0.16 22.67);
+    --destructive-foreground: oklch(0.98 0.00 301.43);
 
-    --border: 271 76% 90%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 271 76% 53%;
+    --border: oklch(0.84 0.02 300.14);
+    --input: oklch(0.93 0.01 301.28);
+    --ring: oklch(0.61 0.08 299.73);
 
     --radius: 0.5rem;
+
+    --chart-1: oklch(0.61 0.08 299.73);
+
+    --chart-2: oklch(0.79 0.08 359.94);
+
+    --chart-3: oklch(0.73 0.07 169.87);
+
+    --chart-4: oklch(0.85 0.09 76.83);
+
+    --chart-5: oklch(0.79 0.06 258.08);
+
+    --sidebar: oklch(0.96 0.01 301.35);
+
+    --sidebar-foreground: oklch(0.37 0.03 287.08);
+
+    --sidebar-primary: oklch(0.61 0.08 299.73);
+
+    --sidebar-primary-foreground: oklch(0.98 0.00 301.43);
+
+    --sidebar-accent: oklch(0.79 0.08 359.94);
+
+    --sidebar-accent-foreground: oklch(0.34 0.04 1.76);
+
+    --sidebar-border: oklch(0.87 0.02 302.17);
+
+    --sidebar-ring: oklch(0.61 0.08 299.73);
+
+    --font-sans: Geist, sans-serif;
+
+    --font-serif: "Lora", Georgia, serif;
+
+    --font-mono: "Fira Code", "Courier New", monospace;
+
+    --shadow-color: hsl(0 0% 0%);
+
+    --shadow-opacity: 0.06;
+
+    --shadow-blur: 5px;
+
+    --shadow-spread: 1px;
+
+    --shadow-offset-x: 1px;
+
+    --shadow-offset-y: 2px;
+
+    --letter-spacing: 0em;
+
+    --spacing: 0.25rem;
+
+    --shadow-2xs: 1px 2px 5px 1px hsl(0 0% 0% / 0.03);
+
+    --shadow-xs: 1px 2px 5px 1px hsl(0 0% 0% / 0.03);
+
+    --shadow-sm: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 1px 2px 0px hsl(0 0% 0% / 0.06);
+
+    --shadow: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 1px 2px 0px hsl(0 0% 0% / 0.06);
+
+    --shadow-md: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 2px 4px 0px hsl(0 0% 0% / 0.06);
+
+    --shadow-lg: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 4px 6px 0px hsl(0 0% 0% / 0.06);
+
+    --shadow-xl: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 8px 10px 0px hsl(0 0% 0% / 0.06);
+
+    --shadow-2xl: 1px 2px 5px 1px hsl(0 0% 0% / 0.15);
+
+    --tracking-normal: 0em;
   }
 
   .dark {
-    --background: 270 20% 11%;
-    --foreground: 210 40% 98%;
+    --background: oklch(0.22 0.02 292.85);
+    --foreground: oklch(0.91 0.02 293.56);
 
-    --card: 270 20% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: oklch(0.25 0.03 292.73);
+    --card-foreground: oklch(0.91 0.02 293.56);
 
-    --popover: 270 20% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: oklch(0.25 0.03 292.73);
+    --popover-foreground: oklch(0.91 0.02 293.56);
 
-    --primary: 271 76% 53%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: oklch(0.71 0.08 302.05);
+    --primary-foreground: oklch(0.22 0.02 292.85);
 
-    --secondary: 270 20% 16%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: oklch(0.46 0.05 295.56);
+    --secondary-foreground: oklch(0.91 0.02 293.56);
 
-    --muted: 270 20% 16%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: oklch(0.26 0.03 294.84);
+    --muted-foreground: oklch(0.70 0.03 300.06);
 
-    --accent: 270 20% 16%;
-    --accent-foreground: 210 40% 98%;
+    --accent: oklch(0.32 0.03 308.61);
+    --accent-foreground: oklch(0.84 0.07 2.67);
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: oklch(0.69 0.14 21.46);
+    --destructive-foreground: oklch(0.22 0.02 292.85);
 
-    --border: 270 20% 20%;
-    --input: 270 20% 16%;
-    --ring: 271 76% 53%;
+    --border: oklch(0.31 0.04 293.34);
+    --input: oklch(0.28 0.03 291.27);
+    --ring: oklch(0.71 0.08 302.05);
+    --chart-1: oklch(0.71 0.08 302.05);
+    --chart-2: oklch(0.84 0.07 2.67);
+    --chart-3: oklch(0.73 0.07 169.87);
+    --chart-4: oklch(0.85 0.09 76.83);
+    --chart-5: oklch(0.79 0.06 258.08);
+    --radius: 0.5rem;
+    --sidebar: oklch(0.20 0.02 293.66);
+    --sidebar-foreground: oklch(0.91 0.02 293.56);
+    --sidebar-primary: oklch(0.71 0.08 302.05);
+    --sidebar-primary-foreground: oklch(0.22 0.02 292.85);
+    --sidebar-accent: oklch(0.32 0.03 308.61);
+    --sidebar-accent-foreground: oklch(0.84 0.07 2.67);
+    --sidebar-border: oklch(0.28 0.03 291.27);
+    --sidebar-ring: oklch(0.71 0.08 302.05);
+    --font-sans: Geist, sans-serif;
+    --font-serif: "Lora", Georgia, serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --shadow-color: hsl(0 0% 0%);
+    --shadow-opacity: 0.06;
+    --shadow-blur: 5px;
+    --shadow-spread: 1px;
+    --shadow-offset-x: 1px;
+    --shadow-offset-y: 2px;
+    --letter-spacing: 0em;
+    --spacing: 0.25rem;
+    --shadow-2xs: 1px 2px 5px 1px hsl(0 0% 0% / 0.03);
+    --shadow-xs: 1px 2px 5px 1px hsl(0 0% 0% / 0.03);
+    --shadow-sm: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 1px 2px 0px hsl(0 0% 0% / 0.06);
+    --shadow: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 1px 2px 0px hsl(0 0% 0% / 0.06);
+    --shadow-md: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 2px 4px 0px hsl(0 0% 0% / 0.06);
+    --shadow-lg: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 4px 6px 0px hsl(0 0% 0% / 0.06);
+    --shadow-xl: 1px 2px 5px 1px hsl(0 0% 0% / 0.06), 1px 8px 10px 0px hsl(0 0% 0% / 0.06);
+    --shadow-2xl: 1px 2px 5px 1px hsl(0 0% 0% / 0.15);
+  }
+  .theme {
+    --font-sans: Geist, sans-serif;
+    --font-mono: "Fira Code", "Courier New", monospace;
+    --font-serif: "Lora", Georgia, serif;
+    --radius: 0.5rem;
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+  }
+  body {
+    letter-spacing: var(--tracking-normal);
   }
 }
 
@@ -217,9 +330,7 @@
   animation: fadeOut 0.3s ease forwards;
 }
 
-
 /* Connect Wallet Button Styling */
 button.wallet-adapter-button-trigger {
   @apply w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2 text-sm;
 }
-
