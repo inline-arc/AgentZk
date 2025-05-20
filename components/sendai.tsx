@@ -15,9 +15,7 @@ const wallet = new KeypairWallet(keyPair);
 const agent = new SolanaAgentKit(
   wallet,
   "YOUR_RPC_URL",
-  {
-    OPENAI_API_KEY: "YOUR_OPENAI_API_KEY",
-  }
+  "YOUR_OPENAI_API_KEY"
 ) 
   .use(TokenPlugin)
   .use(NFTPlugin)
