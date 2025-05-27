@@ -6,22 +6,29 @@ import MiscPlugin from "@solana-agent-kit/plugin-misc";
 import BlinksPlugin from "@solana-agent-kit/plugin-blinks";
 import { Keypair } from "@solana/web3.js";
 import bs58 from "bs58";
+import { config } from "dotenv";
+config(); 
 
-// Create a keypair from a private key
+// Load environment variables from .env file
+// Ensure you have a .env file with OPENAI_API_KEY and other necessary variables
+// Example .env file content:
+// OPENAI_API_KEY=your_openai_api_key 
+
 const keyPair = Keypair.fromSecretKey(bs58.decode("YOUR_SECRET_KEY"));
-const wallet = new KeypairWallet(keyPair);
+const wallet = new KeypairWallet(keyPair, "YOUR_RPC_URL");
+  
 
-// Initialize with wallet and optional RPC URL
 const agent = new SolanaAgentKit(
   wallet,
-  "YOUR_RPC_URL",
-  "YOUR_OPENAI_API_KEY"
+  "",
+   {
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+   }
 ) 
   .use(TokenPlugin)
-  .use(NFTPlugin)
   .use(DefiPlugin)
+  .use(NFTPlugin)
   .use(MiscPlugin)
   .use(BlinksPlugin);
 
-// Create Vercel AI tools (or use createLangchainTools for LangChain)
 const tools = createVercelAITools(agent, agent.actions);

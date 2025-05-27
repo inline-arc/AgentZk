@@ -199,7 +199,7 @@ export default function Home() {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
         <div className="p-6 flex items-center">
-          <div className="text-purple-300 font-semibold text-lg">Sniffzk</div>
+          <div className="text-purple-300 font-semibold text-lg">AgentZk</div>
         </div>
 
         <div className="px-4 py-2">
