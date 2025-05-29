@@ -6,16 +6,16 @@ import bs58 from "bs58";
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, modelName } = await req.json();
-    console.log("modelName", modelName);
-    const { agentzk, config } = await getAgent(modelName);
+    const { message, modeName } = await req.json();
+    console.log("modelName", modeName);
+    const { agentzk, config } = await getAgent(modeName);
 
     const messages = [
       new HumanMessage({
         content: message
       })
     ];
-
+    // 
     const stream = await agentzk.stream({ messages }, config);
 
     let response = "";
