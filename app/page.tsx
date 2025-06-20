@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import {
   Search,
   Sun,
@@ -17,19 +17,42 @@ import {
   Send,
   Plus,
   CheckCircle,
+  TicketX,
+  LogOut,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { FileDropArea } from "@/components/file-drop-area"
 import { ModelSelector } from "@/components/model-selector"
+import bs58 from "bs58"
+import { myProvider } from "@/chat/provider"
+import { createVercelAITools } from "solana-agent-kit";
+import { SolanaAgentKit } from "solana-agent-kit";
+import TokenPlugin from "@solana-agent-kit/plugin-token";
 import Image from "next/image"
+import {
+  Connection,
+  PublicKey,
+  sendAndConfirmRawTransaction,
+  SendOptions,
+  Transaction,
+  TransactionSignature,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import { usePhantomWallet } from "../components/wallet-connet";
+import { CoreMessage, generateText } from "ai"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false)
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
   const [showFileDropArea, setShowFileDropArea] = useState(false)
+  //msg 
   const [message, setMessage] = useState("")
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  //phantom 
+  const { phantom, connected, publicKey } = usePhantomWallet();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [chatStarted, setChatStarted] = useState(false)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([])
@@ -72,6 +95,134 @@ export default function Home() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }, [messages])
+
+  // Add RPC URL validation
+  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
+  if (!rpcUrl) {
+    console.error("RPC URL is not configured");
+  }
+
+  //solana signup setup with error handling
+  const solanaTools = useMemo(() => {
+    if (!phantom || !publicKey || !rpcUrl) {
+      return undefined;
+    }
+
+    try {
+      const agent = new SolanaAgentKit(
+        {
+          publicKey: publicKey,
+          signTransaction: async <T extends Transaction | VersionedTransaction>(
+            tx: T
+          ): Promise<T> => {
+            if (!phantom?.solana) {
+              throw new Error("Phantom wallet not initialized");
+            }
+            const signedTransaction = await phantom.solana.signTransaction(tx);
+            return signedTransaction as T;
+          },
+          signMessage: async (msg: Uint8Array) => {
+            if (!phantom?.solana) {
+              throw new Error("Phantom wallet not initialized");
+            }
+            const signedMessage = await phantom.solana.signMessage(msg);
+            return signedMessage.signature;
+          },
+          sendTransaction: async (tx) => {
+            if (!phantom?.solana) {
+              throw new Error("Phantom wallet not initialized");
+            }
+            return await phantom.solana.sendTransaction(tx);
+          },
+          signAllTransactions: async <T extends Transaction | VersionedTransaction>(
+            txs: T[]
+          ): Promise<T[]> => {
+            if (!phantom?.solana) {
+              throw new Error("Phantom wallet not initialized");
+            }
+            return await phantom.solana.signAllTransactions(txs);
+          },
+          signAndSendTransaction: async <T extends Transaction | VersionedTransaction>(
+            tx: T,
+            options?: SendOptions
+          ): Promise<{ signature: string }> => {
+            if (!phantom?.solana) {
+              throw new Error("Phantom wallet not initialized");
+            }
+            const hash = await phantom.solana.signAndSendTransaction(tx);
+            return { signature: hash };
+          },
+        },
+        rpcUrl,
+        { commitment: 'confirmed' }
+      ).use(TokenPlugin);
+
+      return createVercelAITools(agent, agent.actions);
+    } catch (error) {
+      console.error("Failed to initialize Solana tools:", error);
+      return undefined;
+    }
+  }, [phantom, publicKey, rpcUrl]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    if (!solanaTools) {
+      setMessages([
+        ...messages,
+        {
+          role: "assistant",
+          content: "Please connect your wallet first to interact with Solana.",
+        },
+      ]);
+      return;
+    }
+
+    const userMessage: CoreMessage = { role: "user", content: input };
+    const newUserMessage = { role: "user" as const, content: input };
+    const updatedMessages = [...messages, newUserMessage];
+
+    setMessages(updatedMessages);
+    setInput("");
+
+    try {
+      const result = await generateText({
+        model: myProvider.languageModel("chat-model"),
+        messages: updatedMessages,
+        system:
+          `You are a helpful agent that can interact onchain using the Solana Agent Kit. You are
+        empowered to interact onchain using your tools. If you need funds you can request it from the user and provide your wallet details. If there is a 5XX
+        (internal) HTTP error code, ask the user to try again later. If someone asks you to do something you
+        can't do with your currently available tools, you must say so, and encourage them to implement it
+        themselves using the Solana Agent Kit, recommend they go to https://www.solanaagentkit.xyz for more information. Be
+        concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.
+        
+        Mint address for $SEND is SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa`,
+        maxSteps: 5,
+        tools: solanaTools,
+      });
+
+      console.log(result);
+
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          content: result.text || "Sorry, I didn't quite get that.",
+        },
+      ]);
+    } catch (error) {
+      console.error("AI error:", error);
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          content: "Oops! Something went wrong.",
+        },
+      ]);
+    }
+
+    setIsLoading(false);
+  };
 
   const handleSendMessage = () => {
     if (!message.trim()) return
@@ -118,7 +269,7 @@ export default function Home() {
         <div className="p-6 flex items-center">
           <div className="flex items-center">
             <Image src="/images/agentzk-logo.png" alt="" width={40} height={40} className="mr-3 object-contain" />
-            <div className="text-purple-300 font-semibold text-lg">AgentZk</div>
+            <div className="text-purple-300 font-semibold text-lg">Agentzk</div>
           </div>
           <button
             className="ml-4 text-gray-300 bg-transparent p-1 rounded-md hover:bg-[#2d2936] transition-colors"
@@ -162,13 +313,24 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-auto p-4 flex items-center justify-between text-gray-300 border-t border-[#2d2936]">
+        {/* Update the sidebar wallet section */}
+        <div className="mt-auto p-4 flex items-center justify-between text-gray-300 border-t border-[#1a1625]">
           <motion.button
             className="w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={connected ? phantom?.solana?.disconnect : phantom?.solana?.connect}
           >
-            <span className="text-sm">Connect Wallet</span>
+            {connected ? (
+              <>
+                <span className="text-sm">
+                  {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
+                </span>
+                <LogOut className="w-4 h-4" />
+              </>
+            ) : (
+              <span className="text-sm">Connect Wallet</span>
+            )}
           </motion.button>
         </div>
       </motion.div>
@@ -181,7 +343,7 @@ export default function Home() {
             className="absolute top-6 left-6 z-50 text-gray-300 bg-[#2d2936] p-2 rounded-md hover:bg-[#3a3545] transition-colors flex items-center gap-2"
             onClick={() => setSidebarCollapsed(false)}
           >
-            <Image src="/images/agentzk-logo.png" alt="AgentZk Logo" width={28} height={28} className="object-contain" />
+            <Image src="/images/agentzk-logo.png" alt="Agentzk Logo" width={28} height={28} className="object-contain" />
             <PanelLeft size={18} />
           </button>
         )}
@@ -197,224 +359,146 @@ export default function Home() {
         </div>
 
         {/* Chat Content */}
-        <div ref={chatContainerRef} className="flex-1 overflow-auto px-4 pb-4">
-          <AnimatePresence mode="wait">
-            {!chatStarted ? (
-              <motion.div
-                key="welcome"
-                className="max-w-2xl mx-auto pt-16 pb-24"
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <motion.h1
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-3xl font-bold text-white text-center mb-8"
-                >
-                  How can I help you?
-                </motion.h1>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="flex flex-wrap justify-center gap-2 mb-12"
-                >
-                  <Button
-                    variant="outline"
-                    className="bg-[#2d2936] hover:bg-[#3a3545] text-gray-200 border-[#3a3545] rounded-full px-4 py-2 h-auto flex items-center gap-2"
-                  >
-                    <Sparkles size={16} className="text-purple-400" />
-                    <span>Create</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="bg-[#2d2936] hover:bg-[#3a3545] text-gray-200 border-[#3a3545] rounded-full px-4 py-2 h-auto flex items-center gap-2"
-                  >
-                    <FileText size={16} className="text-purple-400" />
-                    <span>Docs</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="bg-[#2d2936] hover:bg-[#3a3545] text-gray-200 border-[#3a3545] rounded-full px-4 py-2 h-auto flex items-center gap-2"
-                  >
-                    <Code size={16} className="text-purple-400" />
-                    <span>Test</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="bg-[#2d2936] hover:bg-[#3a3545] text-gray-200 border-[#3a3545] rounded-full px-4 py-2 h-auto flex items-center gap-2"
-                  >
-                    <BookOpen size={16} className="text-purple-400" />
-                    <span>Learn</span>
-                  </Button>
-                </motion.div>
-
-                <motion.div
-                  className="flex flex-col gap-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  {[
-                    "How does AI work?",
-                    "Are black holes real?",
-                    'How many Rs are in the word "strawberry"?',
-                    "What is the meaning of life?",
-                  ].map((question, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
-                      className="p-3 bg-[#2d2936] hover:bg-[#3a3545] rounded-md text-gray-300 cursor-pointer transition-colors"
-                      onClick={() => {
-                        setMessage(question)
-                        if (textareaRef.current) {
-                          textareaRef.current.style.height = "48px"
-                          textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-                        }
-                      }}
-                    >
-                      {question}
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="chat"
-                className="max-w-2xl mx-auto pt-16"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex flex-col gap-6">
-                  {messages.map((msg, index) => (
-                    <ChatMessage
-                      key={index}
-                      message={msg.content}
-                      role={msg.role}
-                      isLast={index === messages.length - 1}
-                    />
-                  ))}
+        <div ref={chatContainerRef} className="w-full max-w-4xl flex flex-col h-[calc(100vh-24px)] mt-12 mx-auto px-4">
+          <div className="flex-1 flex flex-col overflow-hidden rounded-2xl p-6 backdrop-blur-sm">
+            <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-start justify-start h-full px-4 pt-24">
+                  <h1 className="text-4xl font-medium bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+                    Welcome, {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
+                  </h1>
+                  <p className="text-lg mt-3 bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent">
+                    how can I help you?
+                  </p>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              ) : (
+                messages.map((m, i) => (
+                  <ChatMessage
+                    key={i}
+                    message={m.content}
+                    role={m.role}
+                    isLast={i === messages.length - 1}
+                  />
+                ))
+              )}
+            </div>
+          </div>
 
-        {/* Message Input */}
-        <div className="p-4 border-t border-[#2d2936] bg-[#1a1625]">
-          <div className="max-w-2xl mx-auto">
-            <div className="relative bg-[#2d2936] rounded-lg border border-[#3a3545]">
-              <textarea
-                ref={textareaRef}
-                placeholder="Ask anything"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden"
-                style={{ minHeight: "48px" }}
-              />
-              <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
-                <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50">
-                  <Plus className="h-5 w-5" />
-                </button>
-                <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
-                  <Search className="h-5 w-5" />
-                  <span className="text-sm">Search</span>
-                </button>
-                <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="text-sm">Verify</span>
-                </button>
-                <div className="ml-auto flex items-center">
-                  <div
-                    ref={modelButtonRef}
-                    className="flex items-center mr-2 text-sm text-gray-300 hover:bg-[#3a3545] px-2 py-1 rounded-md cursor-pointer border border-[#3a3545]/50"
-                    onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                      <span>{selectedModel}</span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 ml-1" />
-                  </div>
-                  <button
-                    className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-md mr-1 border border-[#3a3545]/50"
-                    onClick={() => setShowFileDropArea(true)}
-                  >
-                    <Paperclip className="h-5 w-5" />
+          {/* Rest of your input section */}
+          {/* Message Input */}
+          <div className="p-4 border-t border-[#1a1625] bg-[#1a1625]">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative bg-[#2d2936] rounded-lg border border-[#3a3545]">
+                <textarea
+                  ref={textareaRef}
+                  placeholder="Ask anything"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" &&
+                    !e.shiftKey &&
+                    (e.preventDefault(), handleSend())
+                  }
+                  className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden"
+                  style={{ minHeight: "48px" }}
+                />
+                <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
+                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50">
+                    <Plus className="h-5 w-5" />
                   </button>
-                  <motion.button
-                    className={`p-1.5 rounded-md border ${
-                      message.trim()
-                        ? "text-white bg-purple-600 hover:bg-purple-700 border-purple-700"
-                        : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
-                    }`}
-                    whileHover={message.trim() ? { scale: 1.05 } : {}}
-                    whileTap={message.trim() ? { scale: 0.95 } : {}}
-                    disabled={!message.trim()}
-                    onClick={handleSendMessage}
-                  >
-                    <Send className="h-5 w-5" />
-                  </motion.button>
+                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
+                    <Search className="h-5 w-5" />
+                    <span className="text-sm">Search</span>
+                  </button>
+                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="text-sm">Verify</span>
+                  </button>
+                  <div className="ml-auto flex items-center">
+                    <div
+                      ref={modelButtonRef}
+                      className="flex items-center mr-2 text-sm text-gray-300 hover:bg-[#3a3545] px-2 py-1 rounded-md cursor-pointer border border-[#3a3545]/50"
+                      onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                        <span>{selectedModel}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 ml-1" />
+                    </div>
+                    <button
+                      className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-md mr-1 border border-[#3a3545]/50"
+                      onClick={() => setShowFileDropArea(true)}
+                    >
+                      <Paperclip className="h-5 w-5" />
+                    </button>
+                    <motion.button
+                      className={`p-1.5 rounded-md border ${
+                        message.trim()
+                          ? "text-white bg-purple-600 hover:bg-purple-700 border-purple-700"
+                          : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
+                      }`}
+                      whileHover={message.trim() ? { scale: 1.05 } : {}}
+                      whileTap={message.trim() ? { scale: 0.95 } : {}}
+                      disabled={!message.trim()}
+                      onClick={handleSend}
+                    >
+                      <Send className="h-5 w-5" />
+                    </motion.button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Model Selector Dropdown */}
-        <AnimatePresence>
-          {isModelSelectorOpen && (
-            <motion.div
-              ref={modelSelectorRef}
-              className="absolute bottom-24 right-4 md:right-[calc(50%-350px)] w-[400px] max-w-[95vw] bg-[#1e1a29] border border-[#3a3545] rounded-lg shadow-xl z-50 overflow-hidden"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ModelSelector
-                onSelect={(model) => {
-                  setSelectedModel(model)
-                  setIsModelSelectorOpen(false)
-                }}
-                currentModel={selectedModel}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Centered File Drop Area with Glass Effect */}
-        <AnimatePresence>
-          {showFileDropArea && (
-            <motion.div
-              className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={(e) => {
-                if (e.target === e.currentTarget) setShowFileDropArea(false)
-              }}
-            >
+          {/* Model Selector Dropdown */}
+          <AnimatePresence>
+            {isModelSelectorOpen && (
               <motion.div
-                className="w-full max-w-md bg-[#1e1a29]/90 backdrop-blur-md rounded-lg shadow-xl border border-[#3a3545] overflow-hidden"
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                onClick={(e) => e.stopPropagation()}
+                ref={modelSelectorRef}
+                className="absolute bottom-24 right-4 md:right-[calc(50%-350px)] w-[400px] max-w-[95vw] bg-[#1e1a29] border border-[#3a3545] rounded-lg shadow-xl z-50 overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
               >
-                <FileDropArea onClose={() => setShowFileDropArea(false)} />
+                <ModelSelector
+                  onSelect={(model) => {
+                    setSelectedModel(model)
+                    setIsModelSelectorOpen(false)
+                  }}
+                  currentModel={selectedModel}
+                />
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+
+          {/* File Drop Area */}
+          <AnimatePresence>
+            {showFileDropArea && (
+              <motion.div
+                className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) setShowFileDropArea(false)
+                }}
+              >
+                <motion.div
+                  className="w-full max-w-md bg-[#1e1a29]/90 backdrop-blur-md rounded-lg shadow-xl border border-[#3a3545] overflow-hidden"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <FileDropArea onClose={() => setShowFileDropArea(false)} />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   )
