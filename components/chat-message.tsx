@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import Image from "next/image"
+import { User, Bot } from "lucide-react"
 
 interface ChatMessageProps {
   message: string
@@ -17,27 +17,21 @@ export function ChatMessage({ message, role, isLast }: ChatMessageProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="flex items-start justify-start"
+      className={`flex ${isUser ? "justify-end" : "justify-start"}`}
     >
-      <div className="flex-shrink-0 mr-3">
+      <div className={`flex max-w-[80%] ${isUser ? "flex-row-reverse" : "flex-row"} items-start gap-3`}>
         <div
-          className={`${
-            isUser ? "bg-[#2658DD]" : "bg-white"
-          } rounded-lg flex items-center justify-center w-8 h-8`}
+          className={`flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md ${
+            isUser ? "bg-purple-600" : "bg-[#3a3545]"
+          }`}
         >
-          {isUser ? (
-            <img src="/icons/user-icon.png" alt="User" className="object-contain w-6 h-6" />
-          ) : (
-            <Image src="/sendai.jpg" alt="Sendai Logo" width={32} height={32} className="rounded-lg" />
-          )}
+          {isUser ? <User className="h-5 w-5 text-white" /> : <Bot className="h-5 w-5 text-white" />}
         </div>
-      </div>
-      <div className="flex-1">
         <div
-          className={`rounded-lg p-4 ${
+          className={`glass-message rounded-lg p-4 ${
             isUser
-              ? "bg-[#2658DD]/10 border border-[#2658DD]/30"
-              : "bg-white/10 border border-white/30"
+              ? "bg-purple-600/20 backdrop-blur-md border border-purple-600/30"
+              : "bg-[#2d2936]/80 backdrop-blur-md border border-[#3a3545]"
           }`}
         >
           {isLast && role === "assistant" ? (

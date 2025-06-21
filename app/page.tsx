@@ -96,86 +96,80 @@ export default function Home() {
     }
   }, [messages])
 
-  // Add RPC URL validation
-  const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
-  if (!rpcUrl) {
-    console.error("RPC URL is not configured");
-  }
-
-  //solana signup setup with error handling
+  //solan signup setup
   const solanaTools = useMemo(() => {
-    if (!phantom || !publicKey || !rpcUrl) {
-      return undefined;
-    }
-
-    try {
+    if (phantom) {
+      const wallet = publicKey;
       const agent = new SolanaAgentKit(
         {
-          publicKey: publicKey,
+          publicKey: wallet!,
           signTransaction: async <T extends Transaction | VersionedTransaction>(
             tx: T
           ): Promise<T> => {
-            if (!phantom?.solana) {
-              throw new Error("Phantom wallet not initialized");
-            }
-            const signedTransaction = await phantom.solana.signTransaction(tx);
+            console.log("sign transaction");
+            if (!phantom) throw new Error("Phantom not initialized.");
+
+            const signedTransaction = await phantom.solana.signTransaction(
+              tx
+            );
             return signedTransaction as T;
           },
-          signMessage: async (msg: Uint8Array) => {
-            if (!phantom?.solana) {
-              throw new Error("Phantom wallet not initialized");
-            }
-            const signedMessage = await phantom.solana.signMessage(msg);
+          signMessage: async (msg:any) => {
+            console.log("sign message");
+            if (!phantom) throw new Error("Phantom not initialized.");
+
+            const signedMessage = await phantom.solana.signMessage(
+              msg
+            );
+
             return signedMessage.signature;
           },
           sendTransaction: async (tx) => {
-            if (!phantom?.solana) {
-              throw new Error("Phantom wallet not initialized");
-            }
-            return await phantom.solana.sendTransaction(tx);
+            console.log("send transaction");
+            if (!phantom) throw new Error("Phantom not initialized.");
+            const transactionHash = await phantom.solana.sendTransaction(tx);
+            return transactionHash;
+
           },
-          signAllTransactions: async <T extends Transaction | VersionedTransaction>(
+          signAllTransactions: async <
+            T extends Transaction | VersionedTransaction,
+          >(
             txs: T[]
           ): Promise<T[]> => {
-            if (!phantom?.solana) {
-              throw new Error("Phantom wallet not initialized");
-            }
-            return await phantom.solana.signAllTransactions(txs);
+            console.log("sign all transaction");
+            if (!phantom) throw new Error("Phantom not initialized.");
+
+            const signedTransaction = await phantom.solana.signAllTransactions(
+              txs
+            );
+            return signedTransaction as T[];
           },
-          signAndSendTransaction: async <T extends Transaction | VersionedTransaction>(
+          signAndSendTransaction: async <
+            T extends Transaction | VersionedTransaction,
+          >(
             tx: T,
             options?: SendOptions
           ): Promise<{ signature: string }> => {
-            if (!phantom?.solana) {
-              throw new Error("Phantom wallet not initialized");
-            }
-            const hash = await phantom.solana.signAndSendTransaction(tx);
-            return { signature: hash };
+            console.log("sign and send transaction");
+            if (!phantom) throw new Error("Phantom not initialized.");
+            const transactionHash = await phantom.solana.signAndSendTransaction(tx);
+            return { signature: transactionHash };
+
           },
         },
-        rpcUrl,
-        { commitment: 'confirmed' }
-      ).use(TokenPlugin);
+        process.env.NEXT_PUBLIC_RPC_URL as string,
+        {}
+      ).use(TokenPlugin)
+      // .use(DefiPlugin)
 
-      return createVercelAITools(agent, agent.actions);
-    } catch (error) {
-      console.error("Failed to initialize Solana tools:", error);
-      return undefined;
+      const tools = createVercelAITools(agent, agent.actions);
+      return tools;
     }
-  }, [phantom, publicKey, rpcUrl]);
+  }, [phantom, publicKey]);
 
+ 
   const handleSend = async () => {
     if (!input.trim()) return;
-    if (!solanaTools) {
-      setMessages([
-        ...messages,
-        {
-          role: "assistant",
-          content: "Please connect your wallet first to interact with Solana.",
-        },
-      ]);
-      return;
-    }
 
     const userMessage: CoreMessage = { role: "user", content: input };
     const newUserMessage = { role: "user" as const, content: input };
@@ -216,7 +210,7 @@ export default function Home() {
         ...updatedMessages,
         {
           role: "assistant",
-          content: "Oops! Something went wrong.",
+          content: "Oops! Something went wrong. lol",
         },
       ]);
     }
