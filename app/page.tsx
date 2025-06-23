@@ -39,8 +39,9 @@ import {
   TransactionSignature,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { usePhantomWallet } from "../components/wallet-connet";
+import { Base58EncodedBytes } from "@solana/kit"
 import { CoreMessage, generateText } from "ai"
+import { usePhantom } from "@/chat/walletprovider"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -48,11 +49,11 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState("Gemini 2.5 Flash")
   const [showFileDropArea, setShowFileDropArea] = useState(false)
   //msg 
-  const [message, setMessage] = useState("")
+  // Using input state instead of message state
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   //phantom 
-  const { phantom, connected, publicKey } = usePhantomWallet();
+  const { phantom, connected, publicKey, connect, disconnect } = usePhantom();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [chatStarted, setChatStarted] = useState(false)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([])
@@ -87,7 +88,7 @@ export default function Home() {
       textareaRef.current.style.height = "48px"
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }
-  }, [message])
+  }, [input])
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -98,11 +99,10 @@ export default function Home() {
 
   //solan signup setup
   const solanaTools = useMemo(() => {
-    if (phantom) {
-      const wallet = publicKey;
+    if (phantom && publicKey) {
       const agent = new SolanaAgentKit(
         {
-          publicKey: wallet!,
+          publicKey: new PublicKey(publicKey),
           signTransaction: async <T extends Transaction | VersionedTransaction>(
             tx: T
           ): Promise<T> => {
@@ -152,9 +152,9 @@ export default function Home() {
           ): Promise<{ signature: string }> => {
             console.log("sign and send transaction");
             if (!phantom) throw new Error("Phantom not initialized.");
-            const transactionHash = await phantom.solana.signAndSendTransaction(tx);
-            return { signature: transactionHash };
-
+            const signedTx = await phantom.solana.signTransaction(tx);
+            const signature = await phantom.solana.sendTransaction(signedTx);
+            return { signature };
           },
         },
         process.env.NEXT_PUBLIC_RPC_URL as string,
@@ -218,31 +218,10 @@ export default function Home() {
     setIsLoading(false);
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return
-
-    // Add user message
-    const newMessages = [...messages, { role: "user" as const, content: message }]
-    setMessages(newMessages)
-    setChatStarted(true)
-    setMessage("")
-
-    // Simulate assistant response after a delay
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        {
-          role: "assistant",
-          content: `This is a simulated response to: "${message}"`,
-        },
-      ])
-    }, 1000)
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSendMessage()
+      handleSend()
     }
   }
 
@@ -313,16 +292,18 @@ export default function Home() {
             className="w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={connected ? phantom?.solana?.disconnect : phantom?.solana?.connect}
+            onClick={connected ? disconnect : connect}
           >
             {connected ? (
-              <>
-                <span className="text-sm">
-                  {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
-                </span>
-                <LogOut className="w-4 h-4" />
-              </>
-            ) : (
+                <>
+                  <span className="text-sm">
+                    {typeof publicKey === 'string' 
+                      ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
+                      : publicKey?.toBase58().slice(0, 4) + '...' + publicKey?.toBase58().slice(-4)}
+                  </span>
+                  <LogOut className="w-4 h-4" />
+                </>
+              ) : (
               <span className="text-sm">Connect Wallet</span>
             )}
           </motion.button>
@@ -359,7 +340,9 @@ export default function Home() {
               {messages.length === 0 ? (
                 <div className="flex flex-col items-start justify-start h-full px-4 pt-24">
                   <h1 className="text-4xl font-medium bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Welcome, {publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)}
+                    Welcome, {typeof publicKey === 'string' 
+                      ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
+                      : publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : 'Guest'}
                   </h1>
                   <p className="text-lg mt-3 bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent">
                     how can I help you?
@@ -428,13 +411,13 @@ export default function Home() {
                     </button>
                     <motion.button
                       className={`p-1.5 rounded-md border ${
-                        message.trim()
+                        input.trim()
                           ? "text-white bg-purple-600 hover:bg-purple-700 border-purple-700"
                           : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
                       }`}
-                      whileHover={message.trim() ? { scale: 1.05 } : {}}
-                      whileTap={message.trim() ? { scale: 0.95 } : {}}
-                      disabled={!message.trim()}
+                      whileHover={input.trim() ? { scale: 1.05 } : {}}
+                      whileTap={input.trim() ? { scale: 0.95 } : {}}
+                      disabled={!input.trim()}
                       onClick={handleSend}
                     >
                       <Send className="h-5 w-5" />
