@@ -9,6 +9,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 const openai = createOpenAI({
     apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
+console.log("OPENAI API KEY:", process.env.NEXT_PUBLIC_OPENAI_API_KEY);
 
 export const myProvider = customProvider({
     languageModels: {   

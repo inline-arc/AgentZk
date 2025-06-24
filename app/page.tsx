@@ -210,7 +210,7 @@ export default function Home() {
         ...updatedMessages,
         {
           role: "assistant",
-          content: "Oops! Something went wrong. lol",
+          content: "You ran out of Tokens, please try again later.",
         },
       ]);
     }
