@@ -4,24 +4,22 @@ import {
     wrapLanguageModel,
 } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-
+import OpenAI from "openai";
 
 const openai = createOpenAI({
-    apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+    //apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
 });
-console.log("OPENAI API KEY:", process.env.NEXT_PUBLIC_OPENAI_API_KEY);
+//console.log("OPENAI API KEY:", process.env.NEXT_PUBLIC_OPENAI_API_KEY);
 
 export const myProvider = customProvider({
-    languageModels: {   
-        "chat-model": openai("gpt-4o"),
-        "chat-model-reasoning": wrapLanguageModel({
-            model: openai("o3-mini"),
-            middleware: extractReasoningMiddleware({ tagName: "think" }),
-        }),
-        "title-model": openai("gpt-3.5-turbo"),
-        "artifact-model": openai("gpt-4"),
-    },
-    imageModels: {
-        "small-model": openai.image("dall-e-3"),
-    },
+  languageModels: {
+    "chat-model": openai("mistralai/mistral-small-3.2-24b-instruct:free"), // OpenRouter ID
+    "chat-model-reasoning": wrapLanguageModel({
+      model: openai("openchat/openchat-3.5"),
+      middleware: extractReasoningMiddleware({ tagName: "think" }),
+    }),
+    "title-model": openai("gryphe/mythomist-7b:free"),
+    "artifact-model": openai("meta-llama/llama-3-70b-instruct"),
+  },
 });

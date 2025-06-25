@@ -4,7 +4,7 @@
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
+//import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { clusterApiUrl } from '@solana/web3.js';
 import { useMemo } from 'react';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
