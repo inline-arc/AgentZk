@@ -79,7 +79,7 @@ const generating = [
 export const DotFlow = ({ 
     items = [
         {
-            title: "Generating...",
+            title: "Importing...",
             frames: importing,
             duration: 200,
             repeatCount: 1
@@ -88,19 +88,19 @@ export const DotFlow = ({
             title: "Syncing...",
             frames: syncing,
             duration: 100,
-            repeatCount: 2
+            repeatCount: 1
         },
         {
             title: "Searching...",
             frames: searching,
             duration: 150,
-            repeatCount: 2
+            repeatCount: 1
         },
         {
             title: "Generating...",
             frames: generating,
             duration: 200,
-            repeatCount: 2
+            repeatCount: 1
         }
     ],
     isPlaying = true,
@@ -113,6 +113,9 @@ export const DotFlow = ({
     const [textIndex, setTextIndex] = useState(0);
     const [allStagesComplete, setAllStagesComplete] = useState(false);
     const [currentStageCompleted, setCurrentStageCompleted] = useState(0);
+    const [stageRepeatCounts, setStageRepeatCounts] = useState<number[]>(
+        items.map(() => 0),
+    );
 
     const { contextSafe } = useGSAP();
 
@@ -126,59 +129,74 @@ export const DotFlow = ({
             duration: 0.5,
             ease: "power2.out",
         });
-    }, [textIndex, items]);
+    }, [textIndex]); // Removed items from dependencies to prevent infinite loop
 
     useEffect(() => {
         setIndex(0);
         setTextIndex(0);
         setAllStagesComplete(false);
         setCurrentStageCompleted(0);
-    }, [items]);
+        // Initialize repeat counts for each stage
+        setStageRepeatCounts(items.map(() => 0));
+    }, [items.length]); // Only depend on length, not the entire items array
 
     const next = contextSafe(() => {
+        if (allStagesComplete) return;
+        
         const el = containerRef.current;
         if (!el) return;
+
+        const currentItem = items[index];
+        const maxRepeats = currentItem?.repeatCount ?? 1;
         
-        const nextIndex = (index + 1) % items.length;
-        const nextTextIndex = (textIndex + 1) % items.length;
-        
-        // Check if we've completed all stages
-        if (nextIndex === 0 && index === items.length - 1) {
-            const newStageCompleted = currentStageCompleted + 1;
-            setCurrentStageCompleted(newStageCompleted);
+        // Check if current stage has completed its repeats
+        if (stageRepeatCounts[index] >= maxRepeats) {
+            // Move to next stage
+            const nextIndex = (index + 1) % items.length;
+            const nextTextIndex = (textIndex + 1) % items.length;
             
-            if (newStageCompleted >= 1 && !allStagesComplete) {
+            // If we've completed all stages, call onComplete and stop
+            if (nextIndex === 0 && index === items.length - 1) {
                 setAllStagesComplete(true);
                 if (onComplete) {
-                    setTimeout(() => onComplete(), 300);
+                    setTimeout(() => onComplete(), 100);
                 }
                 return;
             }
+            
+            // Reset repeat count for new stage
+            const newStageRepeatCounts = [...stageRepeatCounts];
+            newStageRepeatCounts[nextIndex] = 0;
+            setStageRepeatCounts(newStageRepeatCounts);
+            
+            gsap.to(el, {
+                y: 20,
+                opacity: 0,
+                filter: "blur(8px)",
+                duration: 0.3,
+                ease: "power2.in",
+                onComplete: () => {
+                    setTextIndex(nextTextIndex);
+                    setIndex(nextIndex);
+                    gsap.fromTo(
+                        el,
+                        { y: -20, opacity: 0, filter: "blur(4px)" },
+                        {
+                            y: 0,
+                            opacity: 1,
+                            filter: "blur(0px)",
+                            duration: 0.5,
+                            ease: "power2.out",
+                        },
+                    );
+                },
+            });
+        } else {
+            // Increment repeat count for current stage
+            const newStageRepeatCounts = [...stageRepeatCounts];
+            newStageRepeatCounts[index] = newStageRepeatCounts[index] + 1;
+            setStageRepeatCounts(newStageRepeatCounts);
         }
-
-        gsap.to(el, {
-            y: 20,
-            opacity: 0,
-            filter: "blur(8px)",
-            duration: 0.5,
-            ease: "power2.in",
-            onComplete: () => {
-                setTextIndex(nextTextIndex);
-                gsap.fromTo(
-                    el,
-                    { y: -20, opacity: 0, filter: "blur(4px)" },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        filter: "blur(0px)",
-                        duration: 0.7,
-                        ease: "power2.out",
-                    },
-                );
-            },
-        });
-
-        setIndex(nextIndex);
     });
 
     return (
@@ -188,12 +206,12 @@ export const DotFlow = ({
                 onComplete={next}
                 className="gap-px"
                 isPlaying={isPlaying && !allStagesComplete}
-                repeatCount={items[index]?.repeatCount ?? 1}
+                repeatCount={1}
                 duration={items[index]?.duration ?? 150}
                 dotClassName="bg-white/20 [&.active]:bg-purple-400 size-1"
             />
             <div ref={containerRef} className="relative">
-                <div ref={textRef} className="inline-block text-xl font-medium whitespace-nowrap text-gray-300">
+                <div ref={textRef} className="inline-block text-md font-medium whitespace-nowrap text-gray-300">
                     {items[textIndex]?.title}
                 </div>
             </div>

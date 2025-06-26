@@ -200,13 +200,46 @@ export default function Home() {
           tools: solanaTools,
         });
 
-        console.log(result);
+        console.log("Full result:", result);
+
+        // Extract content from response - handle both direct text and tool results
+        let responseContent = result.text || "";
+        
+        // If no direct text but we have steps, extract from steps
+        if (!responseContent && result.steps && result.steps.length > 0) {
+          const lastStep = result.steps[result.steps.length - 1];
+          if (lastStep.text) {
+            responseContent = lastStep.text;
+          } else if (lastStep.toolResults && lastStep.toolResults.length > 0) {
+            // Extract tool results if available
+            const toolResults = lastStep.toolResults.map((toolResult: any) => {
+              if (toolResult.result) {
+                return typeof toolResult.result === 'string' 
+                  ? toolResult.result 
+                  : JSON.stringify(toolResult.result, null, 2);
+              }
+              return "";
+            }).filter(Boolean).join("\n\n");
+            
+            responseContent = toolResults || "Tool executed successfully but no output provided.";
+          }
+        }
+
+        // If still no content, check tool calls
+        if (!responseContent && result.toolCalls && result.toolCalls.length > 0) {
+          responseContent = "I've executed the requested action. Please check your wallet or transaction status.";
+        }
+
+        // Fallback message
+        if (!responseContent) {
+          responseContent = "I received your request but couldn't generate a proper response. Please try again.";
+        }
 
         setMessages([
           ...updatedMessages,
           {
             role: "assistant",
-            content: result.text || "Sorry, I didn't quite get that.",
+            content: responseContent,
           },
         ]);
       } catch (error) {
@@ -215,7 +248,7 @@ export default function Home() {
           ...updatedMessages,
           {
             role: "assistant",
-            content: "You ran out of Tokens, please try again later.",
+            content: "I encountered an error while processing your request. Please try again later.",
           },
         ]);
       }
@@ -510,7 +543,7 @@ export default function Home() {
   )
 }
 
-// Chat Message Component with glass effect and no robot SVG
+// Chat Message Component with glass effect and markdown support
 function ChatMessage({ message, role, isLast }: { message: string; role: "user" | "assistant"; isLast: boolean }) {
   const isUser = role === "user"
 
@@ -536,7 +569,35 @@ function ChatMessage({ message, role, isLast }: { message: string; role: "user" 
         {isLast && role === "assistant" ? (
           <TypewriterText text={message} />
         ) : (
-          <p className="text-gray-200 whitespace-pre-wrap">{message}</p>
+          <div className="text-gray-200">
+            {message.split('\n').map((line, index) => (
+              <p key={index} className="mb-2 last:mb-0">
+                {line.includes('`') ? (
+                  line.split('`').map((part, i) => 
+                    i % 2 === 1 ? (
+                      <code key={i} className="bg-[#1a1625] text-purple-300 px-1 py-0.5 rounded text-sm font-mono">
+                        {part}
+                      </code>
+                    ) : (
+                      part
+                    )
+                  )
+                ) : (
+                  line.includes('**') ? (
+                    line.split('**').map((part, i) => 
+                      i % 2 === 1 ? (
+                        <strong key={i} className="text-white font-semibold">{part}</strong>
+                      ) : (
+                        part
+                      )
+                    )
+                  ) : (
+                    line
+                  )
+                )}
+              </p>
+            ))}
+          </div>
         )}
       </div>
     </motion.div>
@@ -545,21 +606,69 @@ function ChatMessage({ message, role, isLast }: { message: string; role: "user" 
 
 // Typewriter effect for the last assistant message
 function TypewriterText({ text }: { text: string }) {
+  const [displayText, setDisplayText] = useState("")
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isComplete, setIsComplete] = useState(false)
+
+  useEffect(() => {
+    // Reset when text changes
+    setDisplayText("")
+    setCurrentIndex(0)
+    setIsComplete(false)
+  }, [text])
+
+  useEffect(() => {
+    if (currentIndex < text.length && !isComplete) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex])
+        setCurrentIndex(prev => prev + 1)
+        
+        // Mark as complete when we reach the end
+        if (currentIndex + 1 >= text.length) {
+          setIsComplete(true)
+        }
+      }, 30)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [currentIndex, text.length, isComplete, text])
+
   return (
-    <motion.p className="text-gray-200 whitespace-pre-wrap" initial={{ opacity: 1 }} animate={{ opacity: 1 }}>
-      <motion.span
-        initial={{ width: "0%" }}
-        animate={{ width: "100%" }}
-        transition={{ duration: 0.05 * text.length, ease: "linear" }}
-        style={{ display: "inline-block", whiteSpace: "pre-wrap" }}
-      >
-        {text}
-      </motion.span>
-      <motion.span
-        animate={{ opacity: [0, 1, 0] }}
-        transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8 }}
-        className="inline-block w-1 h-4 ml-0.5 bg-gray-300 align-middle"
-      />
-    </motion.p>
+    <div className="text-gray-200">
+      {displayText.split('\n').map((line, index) => (
+        <p key={index} className="mb-2 last:mb-0">
+          {line.includes('`') ? (
+            line.split('`').map((part, i) => 
+              i % 2 === 1 ? (
+                <code key={i} className="bg-[#1a1625] text-purple-300 px-1 py-0.5 rounded text-sm font-mono">
+                  {part}
+                </code>
+              ) : (
+                part
+              )
+            )
+          ) : (
+            line.includes('**') ? (
+              line.split('**').map((part, i) => 
+                i % 2 === 1 ? (
+                  <strong key={i} className="text-white font-semibold">{part}</strong>
+                ) : (
+                  part
+                )
+              )
+            ) : (
+              line
+            )
+          )}
+        </p>
+      ))}
+      {!isComplete && (
+        <motion.span
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8 }}
+          className="inline-block w-1 h-4 ml-0.5 bg-gray-300 align-middle"
+        />
+      )}
+    </div>
   )
 }
