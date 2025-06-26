@@ -42,6 +42,7 @@ import {
 import { Base58EncodedBytes } from "@solana/kit"
 import { CoreMessage, generateText } from "ai"
 import { usePhantom } from "@/chat/walletprovider"
+import { DotFlow } from "@/components/gsap/dot-flow"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -61,6 +62,7 @@ export default function Home() {
   const modelButtonRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [processingCallback, setProcessingCallback] = useState<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     setMounted(true)
@@ -177,45 +179,51 @@ export default function Home() {
 
     setMessages(updatedMessages);
     setInput("");
+    setIsLoading(true);
 
-    try {
-      const result = await generateText({
-        model: myProvider.languageModel("chat-model"),
-        messages: updatedMessages,
-        system:
-          `You are a helpful agent that can interact onchain using the Solana Agent Kit. You are
-        empowered to interact onchain using your tools. If you need funds you can request it from the user and provide your wallet details. If there is a 5XX
-        (internal) HTTP error code, ask the user to try again later. If someone asks you to do something you
-        can't do with your currently available tools, you must say so, and encourage them to implement it
-        themselves using the Solana Agent Kit, recommend they go to https://www.solanaagentkit.xyz for more information. Be
-        concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.
-        
-        Mint address for $SEND is SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa`,
-        maxSteps: 5,
-        tools: solanaTools,
-      });
+    // Create processing function that will be called after loading stages complete
+    const processAIResponse = async () => {
+      try {
+        const result = await generateText({
+          model: myProvider.languageModel("chat-model"),
+          messages: updatedMessages,
+          system:
+            `You are a helpful agent that can interact onchain using the Solana Agent Kit. You are
+          empowered to interact onchain using your tools. If you need funds you can request it from the user and provide your wallet details. If there is a 5XX
+          (internal) HTTP error code, ask the user to try again later. If someone asks you to do something you
+          can't do with your currently available tools, you must say so, and encourage them to implement it
+          themselves using the Solana Agent Kit, recommend they go to https://www.solanaagentkit.xyz for more information. Be
+          concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.
+          
+          Mint address for $SEND is SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa`,
+          maxSteps: 5,
+          tools: solanaTools,
+        });
 
-      console.log(result);
+        console.log(result);
 
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content: result.text || "Sorry, I didn't quite get that.",
-        },
-      ]);
-    } catch (error) {
-      console.error("AI error:", error);
-      setMessages([
-        ...updatedMessages,
-        {
-          role: "assistant",
-          content: "You ran out of Tokens, please try again later.",
-        },
-      ]);
-    }
+        setMessages([
+          ...updatedMessages,
+          {
+            role: "assistant",
+            content: result.text || "Sorry, I didn't quite get that.",
+          },
+        ]);
+      } catch (error) {
+        console.error("AI error:", error);
+        setMessages([
+          ...updatedMessages,
+          {
+            role: "assistant",
+            content: "You ran out of Tokens, please try again later.",
+          },
+        ]);
+      }
 
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    setProcessingCallback(() => processAIResponse);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -349,14 +357,35 @@ export default function Home() {
                   </p>
                 </div>
               ) : (
-                messages.map((m, i) => (
-                  <ChatMessage
-                    key={i}
-                    message={m.content}
-                    role={m.role}
-                    isLast={i === messages.length - 1}
-                  />
-                ))
+                <>
+                  {messages.map((m, i) => (
+                    <ChatMessage
+                      key={i}
+                      message={m.content}
+                      role={m.role}
+                      isLast={i === messages.length - 1}
+                    />
+                  ))}
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex justify-start"
+                    >
+                      <DotFlow 
+                        isPlaying={true} 
+                        className="ml-11" 
+                        onComplete={() => {
+                          if (processingCallback) {
+                            processingCallback();
+                            setProcessingCallback(null);
+                          }
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </>
               )}
             </div>
           </div>

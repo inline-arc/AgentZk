@@ -8,7 +8,7 @@ import OpenAI from "openai";
 
 const openai = createOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
-    //apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
+  //  apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
 });
 //console.log("OPENAI API KEY:", process.env.NEXT_PUBLIC_OPENAI_API_KEY);
 

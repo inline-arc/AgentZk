@@ -6,8 +6,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { PhantomProvider } from "@/chat/walletprovider";
 
 export const metadata: Metadata = {
-  title: "AgentZk",
+  title: "Agentzk",
   description: "The best AI Chat ever made",
+  icons: "/images/agentzk-logo.png",
 }
 
 export default function RootLayout({
