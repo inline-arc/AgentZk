@@ -79,29 +79,23 @@ const generating = [
 export const DotFlow = ({ 
     items = [
         {
-            title: "Importing...",
+            title: "Generating",
             frames: importing,
-            duration: 200,
+            duration: 50,
             repeatCount: 1
         },
         {
-            title: "Syncing...",
+            title: "Syncing",
             frames: syncing,
-            duration: 100,
+            duration: 50,
             repeatCount: 1
         },
         {
-            title: "Searching...",
+            title: "Searching",
             frames: searching,
-            duration: 150,
+            duration: 50,
             repeatCount: 1
         },
-        {
-            title: "Generating...",
-            frames: generating,
-            duration: 200,
-            repeatCount: 1
-        }
     ],
     isPlaying = true,
     className = "",

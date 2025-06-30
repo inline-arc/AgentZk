@@ -102,71 +102,76 @@ export default function Home() {
   //solan signup setup
   const solanaTools = useMemo(() => {
     if (phantom && publicKey) {
-      const agent = new SolanaAgentKit(
-        {
-          publicKey: new PublicKey(publicKey),
-          signTransaction: async <T extends Transaction | VersionedTransaction>(
-            tx: T
-          ): Promise<T> => {
-            console.log("sign transaction");
-            if (!phantom) throw new Error("Phantom not initialized.");
+      try {
+        const agent = new SolanaAgentKit(
+          {
+            publicKey: new PublicKey(publicKey),
+            signTransaction: async <T extends Transaction | VersionedTransaction>(
+              tx: T
+            ): Promise<T> => {
+              console.log("sign transaction");
+              if (!phantom) throw new Error("Phantom not initialized.");
 
-            const signedTransaction = await phantom.solana.signTransaction(
-              tx
-            );
-            return signedTransaction as T;
+              const signedTransaction = await phantom.solana.signTransaction(
+                tx
+              );
+              return signedTransaction as T;
+            },
+            signMessage: async (msg: Uint8Array) => {
+              console.log("sign message");
+              if (!phantom) throw new Error("Phantom not initialized.");
+
+              const signedMessage = await phantom.solana.signMessage(
+                msg
+              );
+
+              return signedMessage.signature;
+            },
+            sendTransaction: async (tx: Transaction | VersionedTransaction) => {
+              console.log("send transaction");
+              if (!phantom) throw new Error("Phantom not initialized.");
+              const transactionHash = await phantom.solana.sendTransaction(tx);
+              return transactionHash;
+            },
+            signAllTransactions: async <
+              T extends Transaction | VersionedTransaction,
+            >(
+              txs: T[]
+            ): Promise<T[]> => {
+              console.log("sign all transaction");
+              if (!phantom) throw new Error("Phantom not initialized.");
+
+              const signedTransaction = await phantom.solana.signAllTransactions(
+                txs
+              );
+              return signedTransaction as T[];
+            },
+            signAndSendTransaction: async <
+              T extends Transaction | VersionedTransaction,
+            >(
+              tx: T,
+              options?: SendOptions
+            ): Promise<{ signature: string }> => {
+              console.log("sign and send transaction");
+              if (!phantom) throw new Error("Phantom not initialized.");
+              const signedTx = await phantom.solana.signTransaction(tx);
+              const signature = await phantom.solana.sendTransaction(signedTx);
+              return { signature };
+            },
           },
-          signMessage: async (msg:any) => {
-            console.log("sign message");
-            if (!phantom) throw new Error("Phantom not initialized.");
+          process.env.NEXT_PUBLIC_RPC_URL as string,
+          {}
+        ).use(TokenPlugin);
 
-            const signedMessage = await phantom.solana.signMessage(
-              msg
-            );
-
-            return signedMessage.signature;
-          },
-          sendTransaction: async (tx) => {
-            console.log("send transaction");
-            if (!phantom) throw new Error("Phantom not initialized.");
-            const transactionHash = await phantom.solana.sendTransaction(tx);
-            return transactionHash;
-
-          },
-          signAllTransactions: async <
-            T extends Transaction | VersionedTransaction,
-          >(
-            txs: T[]
-          ): Promise<T[]> => {
-            console.log("sign all transaction");
-            if (!phantom) throw new Error("Phantom not initialized.");
-
-            const signedTransaction = await phantom.solana.signAllTransactions(
-              txs
-            );
-            return signedTransaction as T[];
-          },
-          signAndSendTransaction: async <
-            T extends Transaction | VersionedTransaction,
-          >(
-            tx: T,
-            options?: SendOptions
-          ): Promise<{ signature: string }> => {
-            console.log("sign and send transaction");
-            if (!phantom) throw new Error("Phantom not initialized.");
-            const signedTx = await phantom.solana.signTransaction(tx);
-            const signature = await phantom.solana.sendTransaction(signedTx);
-            return { signature };
-          },
-        },
-        process.env.NEXT_PUBLIC_RPC_URL as string,
-        {}
-      ).use(TokenPlugin)
-      // .use(DefiPlugin)
-
-      const tools = createVercelAITools(agent, agent.actions);
-      return tools;
+        const tools = createVercelAITools(agent, agent.actions);
+        console.log("Solana tools created successfully");
+        return tools;
+      } catch (error) {
+        console.error("Error creating Solana tools:", error);
+        return {};
+      }
     }
+    return {};
   }, [phantom, publicKey]);
 
  
@@ -184,18 +189,66 @@ export default function Home() {
     // Create processing function that will be called after loading stages complete
     const processAIResponse = async () => {
       try {
+        // Check if wallet is connected for blockchain operations
+        if (!connected || !publicKey) {
+          setMessages([
+            ...updatedMessages,
+            {
+              role: "assistant",
+              content: "Please connect your wallet first to interact with the Solana blockchain. Click the 'Connect Wallet' button in the sidebar to get started.",
+            },
+          ]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Ensure we have valid tools
+        if (!solanaTools || Object.keys(solanaTools).length === 0) {
+          setMessages([
+            ...updatedMessages,
+            {
+              role: "assistant",
+              content: "Solana tools are not properly initialized. Please refresh the page and try again.",
+            },
+          ]);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("Calling AI with tools:", Object.keys(solanaTools));
+        
         const result = await generateText({
           model: myProvider.languageModel("chat-model"),
-          messages: updatedMessages,
-          system:
-            `You are a helpful agent that can interact onchain using the Solana Agent Kit. You are
-          empowered to interact onchain using your tools. If you need funds you can request it from the user and provide your wallet details. If there is a 5XX
-          (internal) HTTP error code, ask the user to try again later. If someone asks you to do something you
-          can't do with your currently available tools, you must say so, and encourage them to implement it
-          themselves using the Solana Agent Kit, recommend they go to https://www.solanaagentkit.xyz for more information. Be
-          concise and helpful with your responses. Refrain from restating your tools' descriptions unless it is explicitly requested.
-          
-          Mint address for $SEND is SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa`,
+          messages: updatedMessages as CoreMessage[],
+          system: `You are a helpful Solana blockchain agent powered by the Solana Agent Kit. You can interact with the Solana blockchain using your available tools.
+
+**Key Capabilities:**
+- Check SOL and SPL token balances for any wallet
+- Send SOL and SPL tokens 
+- Create and manage tokens
+- Interact with DeFi protocols
+- Execute onchain transactions
+
+**Balance Checking:**
+- Use available balance tools to check wallet balances
+- For SOL: omit tokenAddress parameter
+- For SPL tokens: include the token mint address
+
+**Common Token Addresses:**
+- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+- USDT: Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB  
+- BONK: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+- SEND: SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa
+
+**Response Guidelines:**
+- Be concise and helpful
+- Format balances clearly with appropriate decimal places
+- If you need funds, provide your wallet details to the user
+- For 5XX errors, ask the user to try again later
+- If asked to do something outside your capabilities, direct users to https://www.solanaagentkit.xyz
+- Don't restate tool descriptions unless explicitly requested
+
+Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.toBase58() || 'Not connected'}`,
           maxSteps: 5,
           tools: solanaTools,
         });
@@ -242,13 +295,42 @@ export default function Home() {
             content: responseContent,
           },
         ]);
-      } catch (error) {
+      } catch (error: any) {
         console.error("AI error:", error);
+        
+        let errorMessage = "I encountered an error while processing your request.";
+        
+        // Handle specific error types
+        if (error?.message) {
+          if (error.message.includes("500") || error.message.includes("Internal Server Error")) {
+            errorMessage = "The AI service is experiencing high load. Please try again in a moment.";
+          } else if (error.message.includes("Type validation failed")) {
+            errorMessage = "The AI service returned an unexpected response format. Please try again.";
+          } else if (error.message.includes("Invalid JSON")) {
+            errorMessage = "The AI service is currently unavailable. Please try again later.";
+          } else if (error.message.includes("wallet")) {
+            errorMessage = "There was an issue with your wallet connection. Please ensure your wallet is connected and try again.";
+          } else if (error.message.includes("network")) {
+            errorMessage = "Network connection issue. Please check your internet connection and try again.";
+          } else if (error.message.includes("insufficient")) {
+            errorMessage = "Insufficient funds for this transaction. Please check your wallet balance.";
+          }
+        }
+        
+        // Check for provider-specific errors
+        if (error?.code === 500 || error?.status === 500) {
+          errorMessage = "The AI service is temporarily unavailable (Error 500). Please try again in a few moments.";
+        } else if (error?.code === 429) {
+          errorMessage = "Too many requests. Please wait a moment before trying again.";
+        } else if (error?.code === 503) {
+          errorMessage = "The AI service is temporarily down for maintenance. Please try again later.";
+        }
+        
         setMessages([
           ...updatedMessages,
           {
             role: "assistant",
-            content: "I encountered an error while processing your request. Please try again later.",
+            content: errorMessage,
           },
         ]);
       }
@@ -265,6 +347,30 @@ export default function Home() {
       handleSend()
     }
   }
+
+  //balance check
+  async function checkBalances(agent: SolanaAgentKit) {
+  // Check own balances
+  const mySolBalance = await agent.methods.getBalance();
+  console.log("My SOL balance:", mySolBalance);
+
+  const myUsdcBalance = await agent.methods.getBalance(
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+  );
+  console.log("My USDC balance:", myUsdcBalance);
+
+  // Check other wallet's balances
+  const otherWallet = new PublicKey("GDEkQF7UMr7RLv1KQKMtm8E2w3iafxJLtyXu3HVQZnME");
+  
+  const otherSolBalance = await agent.methods.getBalanceOther(otherWallet);
+  console.log("Other wallet SOL balance:", otherSolBalance);
+
+  const otherUsdcBalance = await agent.methods.getBalanceOther(
+    otherWallet,
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+  );
+  console.log("Other wallet USDC balance:", otherUsdcBalance);
+}
 
   if (!mounted) return null
 
@@ -433,12 +539,9 @@ export default function Home() {
                   placeholder="Ask anything"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) =>
-                    e.key === "Enter" &&
-                    !e.shiftKey &&
-                    (e.preventDefault(), handleSend())
-                  }
-                  className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden"
+                  onKeyDown={handleKeyDown}
+                  disabled={isLoading}
+                  className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden disabled:opacity-50"
                   style={{ minHeight: "48px" }}
                 />
                 <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
@@ -473,13 +576,13 @@ export default function Home() {
                     </button>
                     <motion.button
                       className={`p-1.5 rounded-md border ${
-                        input.trim()
+                        input.trim() && !isLoading
                           ? "text-white bg-purple-600 hover:bg-purple-700 border-purple-700"
                           : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
                       }`}
-                      whileHover={input.trim() ? { scale: 1.05 } : {}}
-                      whileTap={input.trim() ? { scale: 0.95 } : {}}
-                      disabled={!input.trim()}
+                      whileHover={input.trim() && !isLoading ? { scale: 1.05 } : {}}
+                      whileTap={input.trim() && !isLoading ? { scale: 0.95 } : {}}
+                      disabled={!input.trim() || isLoading}
                       onClick={handleSend}
                     >
                       <Send className="h-5 w-5" />
