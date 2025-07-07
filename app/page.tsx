@@ -43,6 +43,7 @@ import { Base58EncodedBytes } from "@solana/kit"
 import { CoreMessage, generateText } from "ai"
 import { usePhantom } from "@/chat/walletprovider"
 import { DotFlow } from "@/components/gsap/dot-flow"
+//import { createBalanceTools, registerBalanceMethods } from "@/agents/getBalance"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -162,12 +163,16 @@ export default function Home() {
           process.env.NEXT_PUBLIC_RPC_URL as string,
           {}
         ).use(TokenPlugin);
-
+        
+        console.log("Agent created, available actions:", Object.keys(agent.actions || {}));
+        console.log("Agent methods:", Object.keys(agent.methods || {}));
+        
         const tools = createVercelAITools(agent, agent.actions);
-        console.log("Solana tools created successfully");
+        console.log("Tools created successfully:", Object.keys(tools));
+        console.log("Tools structure:", tools);
         return tools;
       } catch (error) {
-        console.error("Error creating Solana tools:", error);
+        console.error("Error initializing Solana Agent Kit:", error);
         return {};
       }
     }
@@ -216,6 +221,7 @@ export default function Home() {
         }
 
         console.log("Calling AI with tools:", Object.keys(solanaTools));
+        console.log("User input:", input);
         
         const result = await generateText({
           model: myProvider.languageModel("chat-model"),
@@ -229,64 +235,88 @@ export default function Home() {
 - Interact with DeFi protocols
 - Execute onchain transactions
 
-**Balance Checking:**
-- Use available balance tools to check wallet balances
-- For SOL: omit tokenAddress parameter
-- For SPL tokens: include the token mint address
-
-**Common Token Addresses:**
-- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
-- USDT: Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB  
-- BONK: DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
-- SEND: SENDdRQtYMWaQrBroBrJ2Q53fgVuq95CV9UPGEvpCxa
+**Available Tools:**
+${Object.keys(solanaTools).length > 0 ? Object.keys(solanaTools).join(', ') : 'No tools available'}
 
 **Response Guidelines:**
-- Be concise and helpful
-- Format balances clearly with appropriate decimal places
-- If you need funds, provide your wallet details to the user
-- For 5XX errors, ask the user to try again later
-- If asked to do something outside your capabilities, direct users to https://www.solanaagentkit.xyz
-- Don't restate tool descriptions unless explicitly requested
+- Always provide a helpful response
+- If you can't use tools, explain what you would do
+- Be conversational and informative
+- If asked about balance, explain the process even if tools aren't working
 
 Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.toBase58() || 'Not connected'}`,
           maxSteps: 5,
           tools: solanaTools,
         });
 
-        console.log("Full result:", result);
+        console.log("AI Response - Full result:", result);
+        console.log("AI Response - Text:", result.text);
+        console.log("AI Response - Steps:", result.steps);
+        console.log("AI Response - Tool calls:", result.toolCalls);
+        console.log("AI Response - Tool results:", result.toolResults);
 
-        // Extract content from response - handle both direct text and tool results
-        let responseContent = result.text || "";
-        
-        // If no direct text but we have steps, extract from steps
+        // Improved content extraction with fallbacks
+        let responseContent = "";
+
+        // First, try to get the main text response
+        if (result.text && result.text.trim()) {
+          responseContent = result.text.trim();
+        }
+
+        // If no main text, check steps for content
         if (!responseContent && result.steps && result.steps.length > 0) {
-          const lastStep = result.steps[result.steps.length - 1];
-          if (lastStep.text) {
-            responseContent = lastStep.text;
-          } else if (lastStep.toolResults && lastStep.toolResults.length > 0) {
-            // Extract tool results if available
-            const toolResults = lastStep.toolResults.map((toolResult: any) => {
+          for (const step of result.steps) {
+            if (step.text && step.text.trim()) {
+              responseContent = step.text.trim();
+              break;
+            }
+            
+            if (step.toolResults && step.toolResults.length > 0) {
+              const toolResults = step.toolResults
+                .map((toolResult: any) => {
+                  if (toolResult.result) {
+                    return typeof toolResult.result === 'string' 
+                      ? toolResult.result 
+                      : JSON.stringify(toolResult.result, null, 2);
+                  }
+                  return "";
+                })
+                .filter(Boolean)
+                .join("\n\n");
+              
+              if (toolResults) {
+                responseContent = toolResults;
+                break;
+              }
+            }
+          }
+        }
+
+        // If still no content, check direct tool results
+        if (!responseContent && result.toolResults && result.toolResults.length > 0) {
+          const toolResults = result.toolResults
+            .map((toolResult: any) => {
               if (toolResult.result) {
                 return typeof toolResult.result === 'string' 
                   ? toolResult.result 
                   : JSON.stringify(toolResult.result, null, 2);
               }
               return "";
-            }).filter(Boolean).join("\n\n");
-            
-            responseContent = toolResults || "Tool executed successfully but no output provided.";
+            })
+            .filter(Boolean)
+            .join("\n\n");
+          
+          if (toolResults) {
+            responseContent = toolResults;
           }
         }
 
-        // If still no content, check tool calls
-        if (!responseContent && result.toolCalls && result.toolCalls.length > 0) {
-          responseContent = "I've executed the requested action. Please check your wallet or transaction status.";
-        }
-
-        // Fallback message
+        // If still no content, fallback message
         if (!responseContent) {
           responseContent = "I received your request but couldn't generate a proper response. Please try again.";
         }
+
+        console.log("Final response content:", responseContent);
 
         setMessages([
           ...updatedMessages,
@@ -348,29 +378,68 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
     }
   }
 
-  //balance check
-  async function checkBalances(agent: SolanaAgentKit) {
-  // Check own balances
-  const mySolBalance = await agent.methods.getBalance();
-  console.log("My SOL balance:", mySolBalance);
+  // Test function to directly check agent capabilities
+  const testAgentDirectly = async () => {
+    if (!phantom || !publicKey) {
+      console.log("Wallet not connected");
+      return;
+    }
 
-  const myUsdcBalance = await agent.methods.getBalance(
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
-  );
-  console.log("My USDC balance:", myUsdcBalance);
+    try {
+      console.log("Creating agent for direct testing...");
+      const agent = new SolanaAgentKit(
+        {
+          publicKey: new PublicKey(publicKey),
+          signTransaction: async <T extends Transaction | VersionedTransaction>(tx: T): Promise<T> => {
+            const signedTransaction = await phantom.solana.signTransaction(tx);
+            return signedTransaction as T;
+          },
+          signMessage: async (msg: Uint8Array) => {
+            const signedMessage = await phantom.solana.signMessage(msg);
+            return signedMessage.signature;
+          },
+          sendTransaction: async (tx: Transaction | VersionedTransaction) => {
+            return await phantom.solana.sendTransaction(tx);
+          },
+          signAllTransactions: async <T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> => {
+            return await phantom.solana.signAllTransactions(txs) as T[];
+          },
+          signAndSendTransaction: async <T extends Transaction | VersionedTransaction>(tx: T): Promise<{ signature: string }> => {
+            const signedTx = await phantom.solana.signTransaction(tx);
+            const signature = await phantom.solana.sendTransaction(signedTx);
+            return { signature };
+          },
+        },
+        process.env.NEXT_PUBLIC_RPC_URL as string,
+        {}
+      ).use(TokenPlugin);
 
-  // Check other wallet's balances
-  const otherWallet = new PublicKey("GDEkQF7UMr7RLv1KQKMtm8E2w3iafxJLtyXu3HVQZnME");
-  
-  const otherSolBalance = await agent.methods.getBalanceOther(otherWallet);
-  console.log("Other wallet SOL balance:", otherSolBalance);
+      console.log("Direct agent created successfully");
+      console.log("Agent methods available:", Object.keys(agent.methods || {}));
+      console.log("Agent actions available:", Object.keys(agent.actions || {}));
 
-  const otherUsdcBalance = await agent.methods.getBalanceOther(
-    otherWallet,
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
-  );
-  console.log("Other wallet USDC balance:", otherUsdcBalance);
-}
+      // Try to use the get_token_balance method
+      if (agent.methods && agent.methods.get_token_balance) {
+        console.log("Found get_token_balance method, calling it...");
+        const balances = await agent.methods.get_token_balance(agent);
+        console.log("SOL Balance:", balances.sol);
+        console.log("Token Balances:", balances.tokens);
+      } else {
+        console.log("get_token_balance method not found");
+        console.log("Available methods:", Object.keys(agent.methods || {}));
+      }
+
+      // Also try other potential balance methods
+      if (agent.methods && agent.methods.getBalance) {
+        console.log("Found getBalance method, calling it...");
+        const solBalance = await agent.methods.getBalance();
+        console.log("SOL Balance via getBalance:", solBalance);
+      }
+
+    } catch (error) {
+      console.error("Error testing agent directly:", error);
+    }
+  };
 
   if (!mounted) return null
 
@@ -472,6 +541,15 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
 
         {/* Top Bar */}
         <div className="flex justify-end items-center p-4">
+          {/* Add test button */}
+          {connected && (
+            <button 
+              className="mr-4 text-gray-400 hover:text-gray-300 px-3 py-1 rounded border border-gray-600 text-sm"
+              onClick={testAgentDirectly}
+            >
+              Test Agent
+            </button>
+          )}
           <button className="ml-4 text-gray-400 hover:text-gray-300">
             <Settings size={20} />
           </button>
