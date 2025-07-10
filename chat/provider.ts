@@ -4,7 +4,7 @@ import {
     wrapLanguageModel,
 } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { getBalanceTool, swapTokensTool } from '../agents/getBalance';
+//import { getBalanceTool, swapTokensTool } from '../agents/solanaAgentKit';
 
 const openai = createOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
@@ -13,7 +13,7 @@ const openai = createOpenAI({
 
 export const myProvider = customProvider({
   languageModels: {
-    "chat-model": openai("mistralai/mistral-small-3.2-24b-instruct:free"),
+    "chat-model": openai("nousresearch/nous-capybara-7b"),
     "chat-model-reasoning": wrapLanguageModel({
       model: openai("openchat/openchat-3.5"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),
@@ -21,8 +21,4 @@ export const myProvider = customProvider({
     "title-model": openai("gryphe/mythomist-7b:free"),
     "artifact-model": openai("meta-llama/llama-3-70b-instruct"),
   },
-  tools: {
-    getBalance: getBalanceTool,
-    swapTokens: swapTokensTool
-  }
 });

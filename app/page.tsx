@@ -44,6 +44,8 @@ import { CoreMessage, generateText } from "ai"
 import { usePhantom } from "@/chat/walletprovider"
 import { DotFlow } from "@/components/gsap/dot-flow"
 //import { createBalanceTools, registerBalanceMethods } from "@/agents/getBalance"
+//import { anthropic } from "@ai-sdk/anthropic"
+
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -225,6 +227,7 @@ export default function Home() {
         
         const result = await generateText({
           model: myProvider.languageModel("chat-model"),
+          tools: solanaTools,
           messages: updatedMessages as CoreMessage[],
           system: `You are a helpful Solana blockchain agent powered by the Solana Agent Kit. You can interact with the Solana blockchain using your available tools.
 
@@ -246,7 +249,6 @@ ${Object.keys(solanaTools).length > 0 ? Object.keys(solanaTools).join(', ') : 'N
 
 Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.toBase58() || 'Not connected'}`,
           maxSteps: 5,
-          tools: solanaTools,
         });
 
         console.log("AI Response - Full result:", result);
@@ -315,6 +317,7 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
         if (!responseContent) {
           responseContent = "I received your request but couldn't generate a proper response. Please try again.";
         }
+
 
         console.log("Final response content:", responseContent);
 
@@ -494,7 +497,7 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
           </div>
         </div>
 
-        <div className="px-4 py-3 text-sm text-purple-300 font-medium">Today</div>
+        <div className="px-4 py-3 text-sm text-purple-300 font-medium">History</div>
 
         <div className="px-4 py-1">
           <div className="px-3 py-2 hover:bg-[#2d2936] rounded-md text-sm text-gray-300 cursor-pointer truncate">
