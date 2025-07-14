@@ -43,6 +43,12 @@ import { Base58EncodedBytes } from "@solana/kit"
 import { CoreMessage, generateText } from "ai"
 import { usePhantom } from "@/chat/walletprovider"
 import { DotFlow } from "@/components/gsap/dot-flow"
+import WalletButton from "@/components/walletbutton"
+import Chatbox from "@/components/chatbox"
+import { ChatMessage } from "@/components/chat-message"
+import Sidebar from "@/components/sidebar"
+import { ModelDropdown } from "@/components/modeldropdown"
+import ChatInput from "@/components/chatinput"
 //import { createBalanceTools, registerBalanceMethods } from "@/agents/getBalance"
 //import { anthropic } from "@ai-sdk/anthropic"
 
@@ -61,8 +67,8 @@ export default function Home() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [chatStarted, setChatStarted] = useState(false)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([])
-  const modelSelectorRef = useRef<HTMLDivElement>(null)
-  const modelButtonRef = useRef<HTMLDivElement>(null)
+  const modelSelectorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
+  const modelButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const [processingCallback, setProcessingCallback] = useState<(() => Promise<void>) | null>(null);
@@ -444,91 +450,16 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
     }
   };
 
-  if (!mounted) return null
+if (!mounted) return null
 
-  return (
-    <div className="flex h-screen bg-[#1a1625]">
-      {/* Sidebar */}
-      <motion.div
-        className="fixed md:relative z-40 h-full flex flex-col border-r border-[#2d2936] bg-[#1a1625]"
-        initial={{ width: 250, x: 0 }}
-        animate={{
-          width: sidebarCollapsed ? 0 : 250,
-          x: sidebarCollapsed ? -250 : 0,
-        }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
-        <div className="p-6 flex items-center">
-          <div className="flex items-center">
-            <Image src="/images/agentzk-logo.png" alt="" width={40} height={40} className="mr-3 object-contain" />
-            <div className="text-purple-300 font-semibold text-lg">Agentzk</div>
-          </div>
-          <button
-            className="ml-4 text-gray-300 bg-transparent p-1 rounded-md hover:bg-[#2d2936] transition-colors"
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          >
-            <PanelLeft size={18} />
-          </button>
-        </div>
+  // Update the handleFileDropAreaClose function to properly close the file drop area
+  const handleFileDropAreaClose = () => {
+    setShowFileDropArea(false);
+  };
 
-        <div className="px-4 py-2">
-          <motion.button
-            className="w-full relative group overflow-hidden bg-gradient-to-r from-[#7b5cfa] to-[#9d5cfa] text-white py-3 font-medium flex items-center justify-center rounded-lg"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-            <div className="flex items-center">
-              <Plus size={18} className="mr-2" />
-              <span>New Chat</span>
-            </div>
-            <div className="absolute -inset-[1px] rounded-lg blur-md -z-10 bg-gradient-to-r from-[#7b5cfa] to-[#9d5cfa] opacity-70"></div>
-          </motion.button>
-        </div>
-
-        <div className="px-4 py-2 relative">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search your threads..."
-              className="w-full pl-9 pr-3 py-2 bg-[#2d2936] border-none rounded-md text-sm focus:outline-none text-gray-300"
-            />
-          </div>
-        </div>
-
-        <div className="px-4 py-3 text-sm text-purple-300 font-medium">History</div>
-
-        <div className="px-4 py-1">
-          <div className="px-3 py-2 hover:bg-[#2d2936] rounded-md text-sm text-gray-300 cursor-pointer truncate">
-            LLM for A2A Agents with Cha...
-          </div>
-        </div>
-
-        {/* Update the sidebar wallet section */}
-        <div className="mt-auto p-4 flex items-center justify-between text-gray-300 border-t border-[#1a1625]">
-          <motion.button
-            className="w-full bg-[#2d2936] hover:bg-[#3a3545] text-white rounded-md py-2 font-medium flex items-center justify-center gap-2"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={connected ? disconnect : connect}
-          >
-            {connected ? (
-                <>
-                  <span className="text-sm">
-                    {typeof publicKey === 'string' 
-                      ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
-                      : publicKey?.toBase58().slice(0, 4) + '...' + publicKey?.toBase58().slice(-4)}
-                  </span>
-                  <LogOut className="w-4 h-4" />
-                </>
-              ) : (
-              <span className="text-sm">Connect Wallet</span>
-            )}
-          </motion.button>
-        </div>
-      </motion.div>
-
+return (
+  <div className="flex h-screen bg-[#14121a] text-gray-300 overflow-hidden">
+    <Sidebar/>
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative">
         {/* Sidebar Toggle Button - Fixed position when sidebar is collapsed */}
@@ -610,117 +541,35 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
             </div>
           </div>
 
-          {/* Rest of your input section */}
           {/* Message Input */}
-          <div className="p-4 border-t border-[#1a1625] bg-[#1a1625]">
-            <div className="max-w-2xl mx-auto">
-              <div className="relative bg-[#2d2936] rounded-lg border border-[#3a3545]">
-                <textarea
-                  ref={textareaRef}
-                  placeholder="Ask anything"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={isLoading}
-                  className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden disabled:opacity-50"
-                  style={{ minHeight: "48px" }}
-                />
-                <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
-                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50">
-                    <Plus className="h-5 w-5" />
-                  </button>
-                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
-                    <Search className="h-5 w-5" />
-                    <span className="text-sm">Search</span>
-                  </button>
-                  <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
-                    <CheckCircle className="h-5 w-5" />
-                    <span className="text-sm">Verify</span>
-                  </button>
-                  <div className="ml-auto flex items-center">
-                    <div
-                      ref={modelButtonRef}
-                      className="flex items-center mr-2 text-sm text-gray-300 hover:bg-[#3a3545] px-2 py-1 rounded-md cursor-pointer border border-[#3a3545]/50"
-                      onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
-                    >
-                      <div className="flex items-center">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
-                        <span>{selectedModel}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 ml-1" />
-                    </div>
-                    <button
-                      className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-md mr-1 border border-[#3a3545]/50"
-                      onClick={() => setShowFileDropArea(true)}
-                    >
-                      <Paperclip className="h-5 w-5" />
-                    </button>
-                    <motion.button
-                      className={`p-1.5 rounded-md border ${
-                        input.trim() && !isLoading
-                          ? "text-white bg-purple-600 hover:bg-purple-700 border-purple-700"
-                          : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
-                      }`}
-                      whileHover={input.trim() && !isLoading ? { scale: 1.05 } : {}}
-                      whileTap={input.trim() && !isLoading ? { scale: 0.95 } : {}}
-                      disabled={!input.trim() || isLoading}
-                      onClick={handleSend}
-                    >
-                      <Send className="h-5 w-5" />
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <ChatInput 
+            onSend={async (message) => {
+              // Set the input and call handleSend
+              setInput(message);
+              await handleSend();
+            }} 
+            isLoading={isLoading} 
+            selectedModel={selectedModel} 
+            setIsModelSelectorOpen={setIsModelSelectorOpen} 
+            isModelSelectorOpen={isModelSelectorOpen} 
+            setShowFileDropArea={setShowFileDropArea} 
+            modelButtonRef={modelButtonRef}
+          />
 
           {/* Model Selector Dropdown */}
-          <AnimatePresence>
-            {isModelSelectorOpen && (
-              <motion.div
-                ref={modelSelectorRef}
-                className="absolute bottom-24 right-4 md:right-[calc(50%-350px)] w-[400px] max-w-[95vw] bg-[#1e1a29] border border-[#3a3545] rounded-lg shadow-xl z-50 overflow-hidden"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ModelSelector
-                  onSelect={(model) => {
-                    setSelectedModel(model)
-                    setIsModelSelectorOpen(false)
-                  }}
-                  currentModel={selectedModel}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <ModelDropdown 
+            isOpen={isModelSelectorOpen}
+            setIsOpen={setIsModelSelectorOpen}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+            modelSelectorRef={modelSelectorRef}
+          />
 
           {/* File Drop Area */}
-          <AnimatePresence>
-            {showFileDropArea && (
-              <motion.div
-                className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black/40 backdrop-blur-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={(e) => {
-                  if (e.target === e.currentTarget) setShowFileDropArea(false)
-                }}
-              >
-                <motion.div
-                  className="w-full max-w-md bg-[#1e1a29]/90 backdrop-blur-md rounded-lg shadow-xl border border-[#3a3545] overflow-hidden"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <FileDropArea onClose={() => setShowFileDropArea(false)} />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {showFileDropArea && (
+            <FileDropArea onClose={handleFileDropAreaClose} />
+          )}
+          
         </div>
       </div>
     </div>
@@ -728,131 +577,4 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
 }
 
 // Chat Message Component with glass effect and markdown support
-function ChatMessage({ message, role, isLast }: { message: string; role: "user" | "assistant"; isLast: boolean }) {
-  const isUser = role === "user"
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-    >
-      <div
-        className={`max-w-[80%] rounded-lg p-4 relative ${
-          isUser
-            ? "bg-gradient-to-r from-[#7b5cfa]/20 to-[#9d5cfa]/20 backdrop-blur-md border border-[#7b5cfa]/30"
-            : "bg-[#2d2936]/80 backdrop-blur-md border border-[#3a3545]/50"
-        }`}
-        style={{
-          clipPath: isUser
-            ? "polygon(0% 0%, 100% 0%, 100% 85%, 95% 100%, 0% 100%)"
-            : "polygon(0% 0%, 100% 0%, 100% 100%, 5% 100%, 0% 85%)",
-        }}
-      >
-        {isLast && role === "assistant" ? (
-          <TypewriterText text={message} />
-        ) : (
-          <div className="text-gray-200">
-            {message.split('\n').map((line, index) => (
-              <p key={index} className="mb-2 last:mb-0">
-                {line.includes('`') ? (
-                  line.split('`').map((part, i) => 
-                    i % 2 === 1 ? (
-                      <code key={i} className="bg-[#1a1625] text-purple-300 px-1 py-0.5 rounded text-sm font-mono">
-                        {part}
-                      </code>
-                    ) : (
-                      part
-                    )
-                  )
-                ) : (
-                  line.includes('**') ? (
-                    line.split('**').map((part, i) => 
-                      i % 2 === 1 ? (
-                        <strong key={i} className="text-white font-semibold">{part}</strong>
-                      ) : (
-                        part
-                      )
-                    )
-                  ) : (
-                    line
-                  )
-                )}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
-    </motion.div>
-  )
-}
-
-// Typewriter effect for the last assistant message
-function TypewriterText({ text }: { text: string }) {
-  const [displayText, setDisplayText] = useState("")
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isComplete, setIsComplete] = useState(false)
-
-  useEffect(() => {
-    // Reset when text changes
-    setDisplayText("")
-    setCurrentIndex(0)
-    setIsComplete(false)
-  }, [text])
-
-  useEffect(() => {
-    if (currentIndex < text.length && !isComplete) {
-      const timeout = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex])
-        setCurrentIndex(prev => prev + 1)
-        
-        // Mark as complete when we reach the end
-        if (currentIndex + 1 >= text.length) {
-          setIsComplete(true)
-        }
-      }, 30)
-      
-      return () => clearTimeout(timeout)
-    }
-  }, [currentIndex, text.length, isComplete, text])
-
-  return (
-    <div className="text-gray-200">
-      {displayText.split('\n').map((line, index) => (
-        <p key={index} className="mb-2 last:mb-0">
-          {line.includes('`') ? (
-            line.split('`').map((part, i) => 
-              i % 2 === 1 ? (
-                <code key={i} className="bg-[#1a1625] text-purple-300 px-1 py-0.5 rounded text-sm font-mono">
-                  {part}
-                </code>
-              ) : (
-                part
-              )
-            )
-          ) : (
-            line.includes('**') ? (
-              line.split('**').map((part, i) => 
-                i % 2 === 1 ? (
-                  <strong key={i} className="text-white font-semibold">{part}</strong>
-                ) : (
-                  part
-                )
-              )
-            ) : (
-              line
-            )
-          )}
-        </p>
-      ))}
-      {!isComplete && (
-        <motion.span
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 0.8 }}
-          className="inline-block w-1 h-4 ml-0.5 bg-gray-300 align-middle"
-        />
-      )}
-    </div>
-  )
-}
+<Chatbox message={""} role={"user"} isLast={false}/>

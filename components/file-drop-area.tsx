@@ -1,119 +1,144 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import { X, Upload, FileText } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Upload, X } from "lucide-react";
 
 interface FileDropAreaProps {
-  onClose: () => void
+  onClose: () => void;
 }
 
 export function FileDropArea({ onClose }: FileDropAreaProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
+    e.preventDefault();
+    setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files)
-      setFiles((prev) => [...prev, ...newFiles])
+      const newFiles = Array.from(e.dataTransfer.files);
+      setFiles((prev) => [...prev, ...newFiles]);
     }
-  }
+  };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files)
-      setFiles((prev) => [...prev, ...newFiles])
+      const newFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...newFiles]);
     }
-  }
+  };
 
   const removeFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index))
-  }
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-white font-medium">Upload files</h3>
-        <motion.button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white p-1 rounded-full border border-[#3a3545]/50"
-          whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.1)" }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <X size={20} />
-        </motion.button>
-      </div>
-
-      <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center ${
-          isDragging ? "border-purple-500 bg-[#2d2936]/50" : "border-[#3a3545]"
-        } transition-colors duration-200`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.div
+        className="bg-[#1e1a29] w-full max-w-xl rounded-lg p-6 shadow-2xl"
+        initial={{ scale: 0.9 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.9 }}
       >
-        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple />
-        <motion.div
-          animate={{ y: [0, -5, 0] }}
-          transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2, ease: "easeInOut" }}
-        >
-          <Upload className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-        </motion.div>
-        <p className="text-gray-300 mb-1">Drag and drop files here, or click to select files</p>
-        <p className="text-gray-500 text-sm">Supports images, documents, and more</p>
-      </div>
-
-      {files.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h4 className="text-white font-medium mb-2">Selected files</h4>
-          {files.map((file, index) => (
-            <motion.div
-              key={index}
-              className="flex items-center justify-between bg-[#2d2936]/80 backdrop-blur-sm p-2 rounded-lg border border-[#3a3545]/50"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-[#3a3545] rounded-md flex items-center justify-center mr-3 border border-[#3a3545]/70">
-                  <FileText className="h-4 w-4 text-gray-300" />
-                </div>
-                <div className="truncate">
-                  <p className="text-gray-300 text-sm truncate">{file.name}</p>
-                  <p className="text-gray-500 text-xs">{(file.size / 1024).toFixed(1)} KB</p>
-                </div>
-              </div>
-              <motion.button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  removeFile(index)
-                }}
-                className="text-gray-400 hover:text-white p-1 rounded-full border border-[#3a3545]/50"
-                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.1)" }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <X size={16} />
-              </motion.button>
-            </motion.div>
-          ))}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-200">Upload Files</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
-      )}
-    </div>
-  )
+
+        <div
+          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+            isDragging ? "border-purple-500 bg-purple-500/10" : "border-gray-600"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <Upload className="h-10 w-10 mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-300 mb-2">Drag files here or click to upload</p>
+          <p className="text-gray-500 text-sm mb-4">
+            Supported files: PDF, TXT, CSV, JSON, JPG, PNG
+          </p>
+          <input
+            type="file"
+            id="file-upload"
+            className="hidden"
+            multiple
+            onChange={handleFileSelect}
+          />
+          <label
+            htmlFor="file-upload"
+            className="inline-block bg-[#2d2936] hover:bg-[#3a3545] text-gray-300 px-4 py-2 rounded-md cursor-pointer transition-colors"
+          >
+            Select Files
+          </label>
+        </div>
+
+        {files.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-gray-300 mb-2">Selected Files ({files.length})</h4>
+            <div className="max-h-40 overflow-y-auto">
+              {files.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-[#2d2936] p-2 rounded mb-2"
+                >
+                  <div className="text-gray-300 text-sm truncate flex-1">
+                    {file.name}
+                  </div>
+                  <button
+                    onClick={() => removeFile(index)}
+                    className="text-gray-400 hover:text-gray-200 ml-2"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-end mt-4 gap-2">
+          <button
+            onClick={onClose}
+            className="bg-[#2d2936] hover:bg-[#3a3545] text-gray-300 px-4 py-2 rounded-md transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded-md transition-colors ${
+              files.length > 0
+                ? "bg-purple-600 hover:bg-purple-700 text-white"
+                : "bg-[#3a3545] text-gray-400 cursor-not-allowed"
+            }`}
+            disabled={files.length === 0}
+          >
+            Upload
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 }
