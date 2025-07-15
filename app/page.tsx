@@ -407,6 +407,7 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
           chatContainerRef={chatContainerRef}
           publicKey={publicKey}
           processingCallback={processingCallback}
+          onSendMessage={handleSendMessage}
         />
 
         {/* Sticky Input Section */}

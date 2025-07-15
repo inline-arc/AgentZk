@@ -9,7 +9,7 @@ import '@/styles/global-utils.css';
 export const metadata: Metadata = {
   title: "Agentzk",
   description: "The best AI Chat ever made",
-  icons: "/images/agentzk-logo.png",
+  icons: "/images/tabicon.ico",
 }
 
 export default function RootLayout({

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ChatMessage } from "@/components/chat-message";
 import { DotFlow } from "@/components/gsap/dot-flow";
+import ChatSuggestions from "@/components/chat-suggestions";
 
 interface ChatContentProps {
   messages: { role: "user" | "assistant"; content: string }[];
@@ -9,6 +10,7 @@ interface ChatContentProps {
   chatContainerRef: React.RefObject<HTMLDivElement>;
   publicKey: any;
   processingCallback: (() => Promise<void>) | null;
+  onSendMessage?: (message: string) => void;
 }
 
 export default function ChatContent({
@@ -16,8 +18,16 @@ export default function ChatContent({
   isLoading,
   chatContainerRef,
   publicKey,
-  processingCallback
+  processingCallback,
+  onSendMessage
 }: ChatContentProps) {
+  
+  const handleSuggestionClick = (suggestion: string) => {
+    if (onSendMessage) {
+      onSendMessage(suggestion);
+    }
+  };
+
   return (
     <div className="w-full max-w-5xl flex flex-col h-[calc(100vh-8rem)] mx-auto px-4 relative">
       <div className="flex-1 flex flex-col overflow-hidden rounded-t-2xl p-6 backdrop-blur-sm">
@@ -36,6 +46,14 @@ export default function ChatContent({
               <p className="text-lg mt-3 bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent">
                 how can I help you?
               </p>
+              
+              {/* Add chat suggestions when no messages */}
+              <div className="mt-8 w-full">
+                <ChatSuggestions 
+                  onSuggestionClick={handleSuggestionClick}
+                  className="justify-start"
+                />
+              </div>
             </div>
           ) : (
             <>
