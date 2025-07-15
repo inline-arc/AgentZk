@@ -175,7 +175,7 @@ function TypewriterText({ text }: { text: string }) {
         if (segment.type === 'code') {
           return (
             <div key={segmentIndex} className="my-4 relative">
-              <div className="flex items-center justify-between bg-[#161320] px-4 py-2 rounded-t-md border-b border-[#3a3545]">
+              <div className="flex items-center justify-between bg-[#161320] px-4 py-2 rounded-t-md">
                 <span className="text-xs text-gray-400">{segment.language}</span>
                 <button
                   onClick={() => {

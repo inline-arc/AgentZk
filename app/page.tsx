@@ -49,6 +49,7 @@ import { ChatMessage } from "@/components/chat-message"
 import Sidebar from "@/components/sidebar"
 import { ModelDropdown } from "@/components/modeldropdown"
 import ChatInput from "@/components/chatinput"
+import ChatContent from "@/components/chatcontent"
 //import { createBalanceTools, registerBalanceMethods } from "@/agents/getBalance"
 //import { anthropic } from "@ai-sdk/anthropic"
 
@@ -492,90 +493,45 @@ return (
           </button>
         </div>
 
-        {/* Chat Content - Updated with increased width */}
-        <div className="w-full max-w-5xl flex flex-col h-[calc(100vh-8rem)] mt-12 mx-auto px-4 relative">
-          <div className="flex-1 flex flex-col overflow-hidden rounded-t-2xl p-6 backdrop-blur-sm">
-            <div 
-              ref={chatContainerRef} 
-              className="flex-1 overflow-y-auto scrollbar-hide px-2 py-4 space-y-6"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {messages.length === 0 ? (
-                <div className="flex flex-col items-start justify-start h-full px-4 pt-24">
-                  <h1 className="text-4xl font-medium bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                    Welcome, {typeof publicKey === 'string' 
-                      ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
-                      : publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : 'Guest'}
-                  </h1>
-                  <p className="text-lg mt-3 bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent">
-                    how can I help you?
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {messages.map((m, i) => (
-                    <ChatMessage
-                      key={i}
-                      message={m.content}
-                      role={m.role}
-                      isLast={i === messages.length - 1}
-                    />
-                  ))}
-                  {isLoading && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="flex justify-start"
-                    >
-                      <DotFlow 
-                        isPlaying={true} 
-                        className="ml-11" 
-                        onComplete={() => {
-                          if (processingCallback) {
-                            processingCallback();
-                            setProcessingCallback(null);
-                          }
-                        }}
-                      />
-                    </motion.div>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
+      {/* Chat Content - Updated with increased width */}
+      <ChatContent 
+        messages={messages}
+        isLoading={isLoading}
+        chatContainerRef={chatContainerRef}
+        publicKey={publicKey}
+        processingCallback={processingCallback}
+      />
 
-          {/* Sticky Input Section */}
-          <div className="sticky bottom-0 z-10">
-            <ChatInput 
-              onSend={handleSendMessage} 
-              isLoading={isLoading} 
-              selectedModel={selectedModel} 
-              setIsModelSelectorOpen={setIsModelSelectorOpen} 
-              isModelSelectorOpen={isModelSelectorOpen} 
-              setShowFileDropArea={setShowFileDropArea} 
-              modelButtonRef={modelButtonRef}
-            />
-          </div>
-
-          {/* Model Selector Dropdown */}
-          <ModelDropdown 
-            isOpen={isModelSelectorOpen}
-            setIsOpen={setIsModelSelectorOpen}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
-            modelSelectorRef={modelSelectorRef}
-          />
-
-          {/* File Drop Area */}
-          {showFileDropArea && (
-            <FileDropArea onClose={handleFileDropAreaClose} />
-          )}
-          
-        </div>
+      {/* Sticky Input Section */}
+      <div className="sticky bottom-0 z-10">
+        <ChatInput 
+          onSend={handleSendMessage} 
+          isLoading={isLoading} 
+          selectedModel={selectedModel} 
+          setIsModelSelectorOpen={setIsModelSelectorOpen} 
+          isModelSelectorOpen={isModelSelectorOpen} 
+          setShowFileDropArea={setShowFileDropArea} 
+          modelButtonRef={modelButtonRef}
+        />
       </div>
+
+      {/* Model Selector Dropdown */}
+      <ModelDropdown 
+        isOpen={isModelSelectorOpen}
+        setIsOpen={setIsModelSelectorOpen}
+        selectedModel={selectedModel}
+        setSelectedModel={setSelectedModel}
+        modelSelectorRef={modelSelectorRef}
+      />
+
+      {/* File Drop Area */}
+      {showFileDropArea && (
+        <FileDropArea onClose={handleFileDropAreaClose} />
+      )}
+      
     </div>
-  )
+  </div>
+)
 }
 
 // Chat Message Component with glass effect and markdown support

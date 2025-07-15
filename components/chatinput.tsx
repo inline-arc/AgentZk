@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Plus, Search, Paperclip, CheckCircle, ChevronDown } from 'lucide-react';
+import { Send, Plus, Search, Paperclip, CheckCircle, ChevronDown, ArrowUp, Globe } from 'lucide-react';
 import { AISuggestions, AISuggestion } from './ai-suggestions';
 
 interface ChatInputProps {
@@ -81,7 +81,7 @@ export default function ChatInput({
 
   return (
     <>
-      <div className="p-4 border-t border-[#1a1625] bg-[#14121a] rounded-b-2xl backdrop-filter backdrop-blur-lg shadow-lg">
+      <div className="p-2 bg-[#14121a] rounded-b-2xl">
         <div className="max-w-3xl mx-auto">
           {/* Only show suggestions when input is empty */}
           {!hasTyped && (
@@ -91,14 +91,14 @@ export default function ChatInput({
                   <AISuggestion 
                     key={suggestion} 
                     suggestion={suggestion} 
-                    onClick={handleSuggestionClick}
+                    onClick={() => handleSuggestionClick(suggestion)}
                   />
                 ))}
               </AISuggestions>
             </div>
           )}
           
-          <div className="relative bg-[#2d2936] rounded-lg border border-[#3a3545]">
+          <div className="relative bg-[#2d2936] rounded-lg">
             <textarea
               ref={textareaRef}
               placeholder="Ask anything"
@@ -114,13 +114,13 @@ export default function ChatInput({
                 <Plus className="h-5 w-5" />
               </button>
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
-                <Search className="h-5 w-5" />
+                <Globe className="h-5 w-5" />
                 <span className="text-sm">Search</span>
               </button>
-              <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
+              {/* <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm">Verify</span>
-              </button>
+              </button> */}
               <div className="ml-auto flex items-center">
                 <div
                   ref={modelButtonRef}
@@ -150,7 +150,7 @@ export default function ChatInput({
                   disabled={!input.trim() || isLoading}
                   onClick={handleSend}
                 >
-                  <Send className="h-5 w-5" />
+                  <ArrowUp className="h-5 w-5" />
                 </motion.button>
               </div>
             </div>

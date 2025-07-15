@@ -17,7 +17,7 @@ export function ChatUI() {
       {/* Message Input */}
       <div className="p-4 border-t border-[#2a2235]">
         <div className="max-w-3xl mx-auto">
-          <div className="relative bg-[#2a2235] rounded-lg border border-[#3a3245]">
+          <div className="relative bg-[#2a2235] rounded-lg">
             <input
               type="text"
               value={message}
