@@ -80,19 +80,7 @@ export const DotFlow = ({
     items = [
         {
             title: "Generating",
-            frames: importing,
-            duration: 50,
-            repeatCount: 1
-        },
-        {
-            title: "Syncing",
             frames: syncing,
-            duration: 50,
-            repeatCount: 1
-        },
-        {
-            title: "Searching",
-            frames: searching,
             duration: 50,
             repeatCount: 1
         },

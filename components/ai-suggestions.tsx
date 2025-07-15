@@ -37,7 +37,7 @@ export const AISuggestion = ({
   return (
     <motion.button
       className={cn(
-        'cursor-pointer rounded-full px-4 py-2 text-sm bg-[#2d2936] text-gray-300 border border-[#3a3545]/50 hover:bg-[#3a3545] transition-colors',
+        'cursor-pointer rounded-full px-4 py-1 text-xs bg-[#2d2936] text-gray-300 border border-[#3a3545]/50 hover:bg-[#3a3545] transition-colors',
         className
       )}
       onClick={handleClick}

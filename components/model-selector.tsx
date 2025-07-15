@@ -74,7 +74,7 @@ export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
           <div>
             <h3 className="text-white font-semibold text-lg">Unlock all models + higher limits</h3>
             <div className="flex items-center mt-1">
-              <span className="text-pink-500 text-2xl font-bold">$8</span>
+              <span className="text-pink-500 text-2xl font-bold">$20</span>
               <span className="text-gray-400 ml-1">/month</span>
             </div>
           </div>

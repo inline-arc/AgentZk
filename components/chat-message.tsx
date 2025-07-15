@@ -81,10 +81,10 @@ export function ChatMessage({ message, role, isLast }: ChatMessageProps) {
         className={`flex ${isUser ? "justify-end" : "justify-start"}`}
       >
         <div
-          className={`max-w-[80%] rounded-lg p-4 relative ${
+          className={`max-w-[80%] text-sm rounded-lg p-4 relative ${
             isUser
-              ? "bg-gradient-to-r from-[#7b5cfa]/20 to-[#9d5cfa]/20 backdrop-blur-md border border-[#7b5cfa]/30"
-              : "bg-[#2d2936]/80 backdrop-blur-md border border-[#3a3545]/50"
+              ? "bg-gradient-to-r from-[#7b5cfa]/20 to-[#9d5cfa]/20 backdrop-blur-sm"
+              : "bg-[#2d2936]/80 backdrop-blur-sm"
           }`}
         >
           {isLast && role === "assistant" ? (
@@ -220,7 +220,7 @@ function TypewriterText({ text }: { text: string }) {
               }
             } else if (line.startsWith('> ')) {
               return (
-                <blockquote key={`${segmentIndex}-${index}`} className="border-l-4 border-purple-500 pl-4 py-1 my-2 bg-[#2a2535]/50 rounded-r-md">
+                <blockquote key={`${segmentIndex}-${index}`} className="border-l-4 pl-4 py-1 my-2 bg-[#2a2535]/50 rounded-r-md">
                   {line.slice(2)}
                 </blockquote>
               );
@@ -228,7 +228,7 @@ function TypewriterText({ text }: { text: string }) {
               return <hr key={`${segmentIndex}-${index}`} className="my-4 border-[#3a3545]" />;
             } else if (line.includes('**') || line.includes('`') || line.includes('__')) {
               return (
-                <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0">
+                <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0 text-sm">
                   {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                        .replace(/__(.*?)__/g, '<strong>$1</strong>')
                        .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -242,7 +242,7 @@ function TypewriterText({ text }: { text: string }) {
             } else if (line === '') {
               return <div key={`${segmentIndex}-${index}`} className="h-2"></div>;
             } else {
-              return <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0">{line}</p>;
+              return <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0 text-sm">{line}</p>;
             }
           });
         }

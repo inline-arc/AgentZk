@@ -71,7 +71,7 @@ export default function Sidebar() {
               </div>
             </div>
 
-            <div className="px-4 py-3 text-sm text-purple-300 font-medium">History</div>
+            <div className="px-4 py-3 text-sm text-purple-300 font-medium">Tasks</div>
 
             <div className="px-4 py-1">
               <div className="px-3 py-2 hover:bg-[#2d2936] rounded-md text-sm text-gray-300 cursor-pointer truncate">

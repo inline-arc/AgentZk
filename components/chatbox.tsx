@@ -70,14 +70,14 @@ function MarkdownContent({ text }: { text: string }) {
           return segment.content.split('\n').map((line, index) => {
             // Enhanced markdown support for inline elements
             if (line.startsWith('# ')) {
-              return <h1 key={`${segmentIndex}-${index}`} className="text-2xl font-bold mb-4 text-white">{line.slice(2)}</h1>;
+              return <h1 key={`${segmentIndex}-${index}`} className="text-sm font-bold mb-4 text-white">{line.slice(2)}</h1>;
             } else if (line.startsWith('## ')) {
-              return <h2 key={`${segmentIndex}-${index}`} className="text-xl font-bold mb-3 text-white">{line.slice(3)}</h2>;
+              return <h2 key={`${segmentIndex}-${index}`} className="text-sm font-bold mb-3 text-white">{line.slice(3)}</h2>;
             } else if (line.startsWith('### ')) {
-              return <h3 key={`${segmentIndex}-${index}`} className="text-lg font-bold mb-2 text-white">{line.slice(4)}</h3>;
+              return <h3 key={`${segmentIndex}-${index}`} className="text-sm font-bold mb-2 text-white">{line.slice(4)}</h3>;
             } else if (line.startsWith('- ')) {
               return (
-                <div key={`${segmentIndex}-${index}`} className="flex items-start mb-1 ml-4">
+                <div key={`${segmentIndex}-${index}`} className="flex items-start mb-1 ml-4 text-sm">
                   <span className="mr-2 text-purple-400">•</span>
                   <span>{line.slice(2)}</span>
                 </div>
@@ -86,7 +86,7 @@ function MarkdownContent({ text }: { text: string }) {
               const numMatch = line.match(/^(\d+)\.\s(.*)/);
               if (numMatch) {
                 return (
-                  <div key={`${segmentIndex}-${index}`} className="flex items-start mb-1 ml-4">
+                  <div key={`${segmentIndex}-${index}`} className="flex items-start mb-1 ml-4 text-sm">
                     <span className="mr-2 text-purple-400 min-w-[20px]">{numMatch[1]}.</span>
                     <span>{numMatch[2]}</span>
                   </div>
@@ -94,7 +94,7 @@ function MarkdownContent({ text }: { text: string }) {
               }
             } else if (line.startsWith('> ')) {
               return (
-                <blockquote key={`${segmentIndex}-${index}`} className="border-l-4 border-purple-500 pl-4 py-1 my-2 bg-[#2a2535]/50 rounded-r-md">
+                <blockquote key={`${segmentIndex}-${index}`} className="border-l-4 border-purple-500 pl-4 py-1 my-2 bg-[#2a2535]/50 rounded-r-md text-sm">
                   {line.slice(2)}
                 </blockquote>
               );
@@ -102,7 +102,7 @@ function MarkdownContent({ text }: { text: string }) {
               return <hr key={`${segmentIndex}-${index}`} className="my-4 border-[#3a3545]" />;
             } else if (line.includes('**') || line.includes('`') || line.includes('__')) {
               return (
-                <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0">
+                <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0 text-sm">
                   {line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                        .replace(/__(.*?)__/g, '<strong>$1</strong>')
                        .replace(/`(.*?)`/g, '<code>$1</code>')
@@ -116,7 +116,7 @@ function MarkdownContent({ text }: { text: string }) {
             } else if (line === '') {
               return <div key={`${segmentIndex}-${index}`} className="h-2"></div>;
             } else {
-              return <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0">{line}</p>;
+              return <p key={`${segmentIndex}-${index}`} className="mb-2 last:mb-0 text-sm">{line}</p>;
             }
           });
         }
@@ -138,8 +138,8 @@ export default function ChatBox({ message, role, isLast }: { message: string; ro
       <div
         className={`max-w-[80%] rounded-lg p-4 relative ${
           isUser
-            ? "bg-gradient-to-r from-[#7b5cfa]/20 to-[#9d5cfa]/20 backdrop-blur-md border border-[#7b5cfa]/30"
-            : "bg-[#2d2936]/80 backdrop-blur-md border border-[#3a3545]/50"
+            ? "bg-gradient-to-r from-[#7b5cfa]/20 to-[#9d5cfa]/20 backdrop-blur-md"
+            : "bg-[#2d2936]/80 backdrop-blur-md"
         }`}
         style={{
           clipPath: isUser
@@ -187,9 +187,9 @@ function TypewriterText({ text }: { text: string }) {
   }, [currentIndex, text.length, isComplete, text])
 
   return (
-    <div className="text-gray-200">
+    <div className="text-gray-200 text-sm">
       {displayText.split('\n').map((line, index) => (
-        <p key={index} className="mb-2 last:mb-0">
+        <p key={index} className="mb-2 last:mb-0 text-sm">
           {line.includes('`') ? (
             line.split('`').map((part, i) => 
               i % 2 === 1 ? (
