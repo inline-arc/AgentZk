@@ -13,7 +13,7 @@ const openai = createOpenAI({
 
 export const myProvider = customProvider({
   languageModels: {
-    "chat-model": openai("nousresearch/nous-capybara-7b"),
+    "chat-model": openai("mistralai/mistral-7b-instruct:free"),
     "chat-model-reasoning": wrapLanguageModel({
       model: openai("openchat/openchat-3.5"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),

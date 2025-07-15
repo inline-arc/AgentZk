@@ -188,15 +188,15 @@ export default function Home() {
   }, [phantom, publicKey]);
 
  
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim() || isLoading) return;
 
-    const userMessage: CoreMessage = { role: "user", content: input };
-    const newUserMessage = { role: "user" as const, content: input };
+    // Use the message from the ChatInput component
+    const userMessage: CoreMessage = { role: "user", content: message };
+    const newUserMessage = { role: "user" as const, content: message };
     const updatedMessages = [...messages, newUserMessage];
 
     setMessages(updatedMessages);
-    setInput("");
     setIsLoading(true);
 
     // Create processing function that will be called after loading stages complete
@@ -229,7 +229,7 @@ export default function Home() {
         }
 
         console.log("Calling AI with tools:", Object.keys(solanaTools));
-        console.log("User input:", input);
+        console.log("User input:", message);
         
         const result = await generateText({
           model: myProvider.languageModel("chat-model"),
@@ -492,10 +492,14 @@ return (
           </button>
         </div>
 
-        {/* Chat Content */}
-        <div ref={chatContainerRef} className="w-full max-w-4xl flex flex-col h-[calc(100vh-24px)] mt-12 mx-auto px-4">
-          <div className="flex-1 flex flex-col overflow-hidden rounded-2xl p-6 backdrop-blur-sm">
-            <div className="flex-1 overflow-y-auto px-2 py-4 space-y-6">
+        {/* Chat Content - Updated with increased width */}
+        <div className="w-full max-w-5xl flex flex-col h-[calc(100vh-8rem)] mt-12 mx-auto px-4 relative">
+          <div className="flex-1 flex flex-col overflow-hidden rounded-t-2xl p-6 backdrop-blur-sm">
+            <div 
+              ref={chatContainerRef} 
+              className="flex-1 overflow-y-auto scrollbar-hide px-2 py-4 space-y-6"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               {messages.length === 0 ? (
                 <div className="flex flex-col items-start justify-start h-full px-4 pt-24">
                   <h1 className="text-4xl font-medium bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
@@ -541,20 +545,18 @@ return (
             </div>
           </div>
 
-          {/* Message Input */}
-          <ChatInput 
-            onSend={async (message) => {
-              // Set the input and call handleSend
-              setInput(message);
-              await handleSend();
-            }} 
-            isLoading={isLoading} 
-            selectedModel={selectedModel} 
-            setIsModelSelectorOpen={setIsModelSelectorOpen} 
-            isModelSelectorOpen={isModelSelectorOpen} 
-            setShowFileDropArea={setShowFileDropArea} 
-            modelButtonRef={modelButtonRef}
-          />
+          {/* Sticky Input Section */}
+          <div className="sticky bottom-0 z-10">
+            <ChatInput 
+              onSend={handleSendMessage} 
+              isLoading={isLoading} 
+              selectedModel={selectedModel} 
+              setIsModelSelectorOpen={setIsModelSelectorOpen} 
+              isModelSelectorOpen={isModelSelectorOpen} 
+              setShowFileDropArea={setShowFileDropArea} 
+              modelButtonRef={modelButtonRef}
+            />
+          </div>
 
           {/* Model Selector Dropdown */}
           <ModelDropdown 

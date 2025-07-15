@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PhantomProvider } from "@/chat/walletprovider";
+import '@/styles/global-utils.css';
 
 export const metadata: Metadata = {
   title: "Agentzk",

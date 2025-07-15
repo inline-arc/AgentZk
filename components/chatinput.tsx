@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
 import { Send, Plus, Search, Paperclip, CheckCircle, ChevronDown } from 'lucide-react';
+import { AISuggestions, AISuggestion } from './ai-suggestions';
 
 interface ChatInputProps {
   onSend: (message: string) => Promise<void>;
@@ -24,6 +25,8 @@ export default function ChatInput({
   // Add the necessary state variables
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Add a state to track if user has typed anything
+  const [hasTyped, setHasTyped] = useState(false);
   
   // Auto-resize textarea
   useEffect(() => {
@@ -36,8 +39,14 @@ export default function ChatInput({
   // Add the necessary handler functions
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    await onSend(input);
-    setInput("");
+    
+    try {
+      // Pass the message to the parent component and clear the input
+      await onSend(input);
+      setInput("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -47,16 +56,54 @@ export default function ChatInput({
     }
   };
 
+  // Limited set of suggestions
+  const suggestions = [
+    "What's my SOL balance?",
+    "Send 0.1 SOL",
+    "Show tokens Balance",
+    "Top Up the Chat"
+  ];
+
+  // Modify the input change handler to track if user has typed
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    if (!hasTyped && e.target.value.trim()) {
+      setHasTyped(true);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    setHasTyped(true); // Mark as typed when a suggestion is clicked
+    // Focus the textarea
+    textareaRef.current?.focus();
+  };
+
   return (
     <>
-      <div className="p-4 border-t border-[#1a1625] bg-[#1a1625]">
-        <div className="max-w-2xl mx-auto">
+      <div className="p-4 border-t border-[#1a1625] bg-[#14121a] rounded-b-2xl backdrop-filter backdrop-blur-lg shadow-lg">
+        <div className="max-w-3xl mx-auto">
+          {/* Only show suggestions when input is empty */}
+          {!hasTyped && (
+            <div className="mb-3">
+              <AISuggestions>
+                {suggestions.map((suggestion) => (
+                  <AISuggestion 
+                    key={suggestion} 
+                    suggestion={suggestion} 
+                    onClick={handleSuggestionClick}
+                  />
+                ))}
+              </AISuggestions>
+            </div>
+          )}
+          
           <div className="relative bg-[#2d2936] rounded-lg border border-[#3a3545]">
             <textarea
               ref={textareaRef}
               placeholder="Ask anything"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
               className="w-full px-4 py-3 bg-transparent border-none rounded-lg focus:outline-none text-gray-300 resize-none min-h-[48px] overflow-hidden disabled:opacity-50"
