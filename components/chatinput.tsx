@@ -83,21 +83,6 @@ export default function ChatInput({
     <>
       <div className="p-2 bg-[#14121a] rounded-b-2xl">
         <div className="max-w-3xl mx-auto">
-          {/* Only show suggestions when input is empty */}
-          {!hasTyped && (
-            <div className="mb-3">
-              <AISuggestions>
-                {suggestions.map((suggestion) => (
-                  <AISuggestion 
-                    key={suggestion} 
-                    suggestion={suggestion} 
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  />
-                ))}
-              </AISuggestions>
-            </div>
-          )}
-          
           <div className="relative bg-[#2d2936] rounded-lg">
             <textarea
               ref={textareaRef}
@@ -110,7 +95,7 @@ export default function ChatInput({
               style={{ minHeight: "48px" }}
             />
             <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
-              <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50">
+              <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full">
                 <Plus className="h-5 w-5" />
               </button>
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full flex items-center gap-1">

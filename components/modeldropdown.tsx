@@ -1,43 +1,50 @@
-import { AnimatePresence } from "framer-motion";
-import { motion } from "framer-motion";
-import { ModelSelector } from "./model-selector";
-import { RefObject } from "react";
+import { ModelSelector } from "./model-selector"
+import { motion } from "framer-motion"
+import { Dispatch, SetStateAction } from "react"
+import { updateModelProvider } from "@/chat/provider"
 
 interface ModelDropdownProps {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
   selectedModel: string;
-  setSelectedModel: (model: string) => void;
-  modelSelectorRef: RefObject<HTMLDivElement>;
+  setSelectedModel: Dispatch<SetStateAction<string>>;
+  modelSelectorRef: React.RefObject<HTMLDivElement>;
 }
 
-export function ModelDropdown({
-  isOpen,
-  setIsOpen,
-  selectedModel,
-  setSelectedModel,
-  modelSelectorRef
-}: ModelDropdownProps) {
+export const ModelDropdown = ({ 
+  isOpen, 
+  setIsOpen, 
+  selectedModel, 
+  setSelectedModel, 
+  modelSelectorRef 
+}: ModelDropdownProps) => {
+  const handleSelectModel = (model: string) => {
+    // Update the selected model
+    setSelectedModel(model)
+    
+    // Close the dropdown
+    setIsOpen(false)
+  }
+
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
-        <motion.div
-          ref={modelSelectorRef}
-          className="absolute bottom-24 right-4 md:right-[calc(50%-350px)] w-[400px] max-w-[95vw] bg-[#1e1a29] border border-[#3a3545] rounded-lg shadow-xl z-50 overflow-hidden"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 10 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ModelSelector
-            onSelect={(model) => {
-              setSelectedModel(model);
-              setIsOpen(false);
-            }}
-            currentModel={selectedModel}
-          />
-        </motion.div>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" onClick={() => setIsOpen(false)}>
+          <div 
+            ref={modelSelectorRef}
+            className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ModelSelector onSelect={handleSelectModel} currentModel={selectedModel} />
+            </motion.div>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
-  );
+    </>
+  )
 }

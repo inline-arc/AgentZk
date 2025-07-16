@@ -33,7 +33,7 @@ import ChatContent from "@/components/chatcontent"
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false)
-  const [selectedModel, setSelectedModel] = useState("Open AI GPT-4")
+  const [selectedModel, setSelectedModel] = useState("Google Gemma 3n") // Changed from "Open AI GPT-4"
   const [showFileDropArea, setShowFileDropArea] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   

@@ -4,16 +4,40 @@ import {
     wrapLanguageModel,
 } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-//import { getBalanceTool, swapTokensTool } from '../agents/solanaAgentKit';
 
+// Create an OpenAI client with OpenRouter
 const openai = createOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
 });
 
-export const myProvider = customProvider({
+// Define model mappings for OpenRouter
+const modelMappings: Record<string, string> = {
+  "Google Gemma 3n": "google/gemma-3n-e2b-it:free",
+  "Mistral 7B Instruct": "mistralai/mistral-7b-instruct:free",
+  "Nous Hermes 2 Yi": "nousresearch/nous-hermes-2-yi-9b:free",
+  "OpenChat 3.5": "openchat/openchat-3.5:free",
+  "Mythomist 7B": "gryphe/mythomist-7b:free",
+  "MBLIP": "jondurbin/mblip:free",
+  "Llama-3 8B Instruct": "meta-llama/llama-3-8b-instruct:free",
+  "Phi-3 Mini": "microsoft/phi-3-mini-4k-instruct:free",
+  "Qwen 1.5 0.5B": "qwen/qwen1.5-0.5b-chat:free",
+  // Default model if none of the above match
+  "default": "mistralai/mistral-7b-instruct:free"
+};
+
+// Track the current model selection
+let currentModelName = "Mistral 7B Instruct";
+
+// Function to get the appropriate model ID for OpenRouter
+const getModelId = (modelName: string): string => {
+  return modelMappings[modelName] || modelMappings.default;
+};
+
+// Create the initial provider
+export let myProvider = customProvider({
   languageModels: {
-    "chat-model": openai("mistralai/mistral-7b-instruct:free"),
+    "chat-model": openai(getModelId(currentModelName)),
     "chat-model-reasoning": wrapLanguageModel({
       model: openai("openchat/openchat-3.5"),
       middleware: extractReasoningMiddleware({ tagName: "think" }),
@@ -22,3 +46,24 @@ export const myProvider = customProvider({
     "artifact-model": openai("meta-llama/llama-3-70b-instruct"),
   },
 });
+
+// Function to update the provider with a new model
+export const updateModelProvider = (modelName: string) => {
+  currentModelName = modelName;
+  
+  // Create a new provider with the updated model
+  myProvider = customProvider({
+    languageModels: {
+      "chat-model": openai(getModelId(modelName)),
+      "chat-model-reasoning": wrapLanguageModel({
+        model: openai("openchat/openchat-3.5"),
+        middleware: extractReasoningMiddleware({ tagName: "think" }),
+      }),
+      "title-model": openai("gryphe/mythomist-7b:free"),
+      "artifact-model": openai("meta-llama/llama-3-70b-instruct"),
+    },
+  });
+  
+  //console.log(`Model switched to: ${modelName} (using ${getModelId(modelName)})`);
+  return myProvider;
+};

@@ -1,59 +1,67 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Eye, Globe, FileText, Brain, ChevronDown, ChevronUp, SlidersHorizontal, Info } from "lucide-react"
 import { motion } from "framer-motion"
+import { updateModelProvider } from "@/chat/provider"
 
 type ModelType = {
   name: string
   capabilities: ("vision" | "web" | "document" | "reasoning")[]
+  modelId: string
   disabled?: boolean
+  free?: boolean
 }
 
 const models: ModelType[] = [
   {
-    name: "ChatGPT o4-mini",
-    capabilities: ["vision", "web", "document"],
+    name: "Google Gemma 3n",
+    capabilities: ["document", "reasoning"],
+    modelId: "google/gemma-3n-e2b-it:free",
+    free: true
   },
   {
-    name: "Gemini 2.5 Flash",
-    capabilities: ["vision", "web", "document"],
+    name: "Mistral 7B Instruct",
+    capabilities: ["document"],
+    modelId: "mistralai/mistral-7b-instruct:free",
+    free: true
   },
   {
-    name: "Gemini 2.5 Flash (Thinking)",
-    capabilities: ["vision", "web", "document"],
-    disabled: true,
+    name: "Nous Hermes 2 Yi",
+    capabilities: ["document", "reasoning"],
+    modelId: "nousresearch/nous-hermes-2-yi-9b:free",
+    free: true
   },
   {
-    name: "Reclaimv2 A2A",
-    capabilities: ["vision", "web", "document", "reasoning"],
-    disabled: true,
+    name: "OpenChat 3.5",
+    capabilities: ["document", "reasoning"],
+    modelId: "openchat/openchat-3.5:free",
+    free: true
   },
   {
-    name: "GPT ImageGen",
+    name: "Mythomist 7B",
+    capabilities: ["document"],
+    modelId: "gryphe/mythomist-7b:free",
+    free: true
+  },
+  {
+    name: "MBLIP",
     capabilities: ["vision"],
-    disabled: true,
+    modelId: "jondurbin/mblip:free",
+    free: true
   },
   {
-    name: "GPT-4.1",
-    capabilities: ["vision"],
-    disabled: true,
+    name: "Llama-3 8B Instruct",
+    capabilities: ["document"],
+    modelId: "meta-llama/llama-3-8b-instruct:free",
+    free: true
   },
   {
-    name: "GPT-4.1 Mini",
-    capabilities: ["vision"],
-    disabled: true,
-  },
-  {
-    name: "GPT-4.1 Nano",
-    capabilities: ["vision"],
-    disabled: true,
-  },
-  {
-    name: "e3-mini",
-    capabilities: ["reasoning"],
-    disabled: true,
-  },
+    name: "Qwen 1.5 0.5B",
+    capabilities: ["document"],
+    modelId: "qwen/qwen1.5-0.5b-chat:free",
+    free: true
+  }
 ]
 
 interface ModelSelectorProps {
@@ -63,11 +71,40 @@ interface ModelSelectorProps {
 
 export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
   const [showAll, setShowAll] = useState(false)
+  const [showTooltip, setShowTooltip] = useState<number | null>(null)
 
   const displayedModels = showAll ? models : models.slice(0, 5)
 
+  // Set default model on first render if none is selected or if it's not one of our models
+  useEffect(() => {
+    // Find Google Gemma 3n model
+    const defaultModel = models.find(model => model.name === "Google Gemma 3n") || models[0];
+    
+    // Check if current model is not in our models list or if it's one of the OpenAI defaults
+    const isCurrentModelInList = models.some(model => model.name === currentModel);
+    const isOpenAIDefault = currentModel.includes("OpenAI") || currentModel.includes("GPT");
+    
+    if (!currentModel || !isCurrentModelInList || isOpenAIDefault) {
+      console.log("Setting default model to:", defaultModel.name);
+      updateModelProvider(defaultModel.name);
+      onSelect(defaultModel.name);
+    }
+  }, []);  // Only run on mount, not on every currentModel change
+
+  // Handle model selection with OpenRouter model updating
+  const handleModelSelect = (model: ModelType) => {
+    if (model.disabled) return;
+    
+    // Update the provider with the new model
+    updateModelProvider(model.name);
+    
+    // Call the parent component's onSelect
+    onSelect(model.name);
+  };
+
   return (
     <div className="flex flex-col w-full bg-[#1e1a29]/90 backdrop-blur-md rounded-lg border border-[#3a3545]/50 overflow-hidden">
+
       {/* Pricing Header */}
       <div className="p-4 border-b border-[#3a3545]">
         <div className="flex justify-between items-center">
@@ -93,16 +130,36 @@ export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
         {displayedModels.map((model, index) => (
           <motion.div
             key={model.name}
-            className={`flex items-center justify-between p-3 hover:bg-[#2d2936]/70 cursor-pointer ${
+            className={`flex items-center justify-between p-3 hover:bg-[#2d2936]/70 cursor-pointer relative ${
               model.disabled ? "opacity-50" : ""
             } ${currentModel === model.name ? "bg-[#2d2936]/70" : ""}`}
             whileHover={{ backgroundColor: model.disabled ? "" : "rgba(45, 41, 54, 0.7)" }}
-            onClick={() => !model.disabled && onSelect(model.name)}
+            onClick={() => !model.disabled && handleModelSelect(model)}
           >
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+              <div className={`w-3 h-3 ${model.free ? "bg-purple-500" : "bg-purple-500"} rounded-full mr-2`}></div>
               <span className={`text-sm ${model.disabled ? "text-gray-500" : "text-gray-300"}`}>{model.name}</span>
-              <Info className="h-4 w-4 ml-2 text-gray-500" />
+              
+              {/* Free tag */}
+              {model.free && (
+                <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-green-900/30 text-green-400 border border-green-800/50">
+                  Free
+                </span>
+              )}
+              
+              {/* Info icon with tooltip */}
+              <div 
+                className="relative ml-2"
+                onMouseEnter={() => setShowTooltip(index)}
+                onMouseLeave={() => setShowTooltip(null)}
+              >
+                <Info className="h-4 w-4 text-gray-500" />
+                {showTooltip === index && model.modelId && (
+                  <div className="absolute left-0 top-6 bg-[#2d2936] text-xs p-2 rounded-md border border-[#3a3545] shadow-lg z-10 whitespace-nowrap">
+                    <span>OpenRouter model: {model.modelId}</span>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-2">
               {model.capabilities.includes("vision") && (
