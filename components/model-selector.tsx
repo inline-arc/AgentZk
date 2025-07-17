@@ -61,6 +61,13 @@ const models: ModelType[] = [
     capabilities: ["document"],
     modelId: "qwen/qwen1.5-0.5b-chat:free",
     free: true
+  },
+  {
+    name: "Gemini 2.5 Flash",
+    capabilities: ["document", "reasoning"],
+    modelId: "google/gemini-2.5-flash",
+    free: false
+
   }
 ]
 

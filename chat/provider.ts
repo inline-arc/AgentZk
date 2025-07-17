@@ -22,19 +22,16 @@ const modelMappings: Record<string, string> = {
   "Llama-3 8B Instruct": "meta-llama/llama-3-8b-instruct:free",
   "Phi-3 Mini": "microsoft/phi-3-mini-4k-instruct:free",
   "Qwen 1.5 0.5B": "qwen/qwen1.5-0.5b-chat:free",
-  // Default model if none of the above match
-  "default": "mistralai/mistral-7b-instruct:free"
+  "Gemini 2.5 Flash": "google/gemini-2.5-flash",
+  // // Default model if none of the above match
+  // "default": "mistralai/mistral-7b-instruct:free"
 };
-
-// Track the current model selection
 let currentModelName = "Mistral 7B Instruct";
 
-// Function to get the appropriate model ID for OpenRouter
 const getModelId = (modelName: string): string => {
   return modelMappings[modelName] || modelMappings.default;
 };
 
-// Create the initial provider
 export let myProvider = customProvider({
   languageModels: {
     "chat-model": openai(getModelId(currentModelName)),
@@ -64,6 +61,6 @@ export const updateModelProvider = (modelName: string) => {
     },
   });
   
-  //console.log(`Model switched to: ${modelName} (using ${getModelId(modelName)})`);
+  console.log(`Model switched to: ${modelName} (using ${getModelId(modelName)})`);
   return myProvider;
 };
