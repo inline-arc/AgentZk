@@ -21,7 +21,7 @@ export default function ChatSuggestions({
         <AISuggestion
           key={suggestion}
           suggestion={suggestion}
-          onClick={onSuggestionClick}
+          onClick={(e) => onSuggestionClick(suggestion)}
         />
       ))}
     </AISuggestions>

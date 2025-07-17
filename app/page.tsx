@@ -15,11 +15,11 @@ import { SolanaAgentKit } from "solana-agent-kit"
 import TokenPlugin from "@solana-agent-kit/plugin-token"
 import Image from "next/image"
 import {
-  PublicKey,
   SendOptions,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js"
+import { PublicKey } from "@solana/web3.js"
 import { CoreMessage, generateText } from "ai"
 import { usePhantom } from "@/chat/walletprovider"
 import { DotFlow } from "@/components/gsap/dot-flow"
@@ -44,7 +44,7 @@ export default function Home() {
   const modelSelectorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
   const modelButtonRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
   const [processingCallback, setProcessingCallback] = useState<(() => Promise<void>) | null>(null)
 
   useEffect(() => {
@@ -193,7 +193,7 @@ ${Object.keys(solanaTools).length > 0 ? Object.keys(solanaTools).join(', ') : 'N
 - Be conversational and informative
 - If asked about balance, explain the process even if tools aren't working
 
-Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.toBase58() || 'Not connected'}`,
+Your connected wallet: ${typeof publicKey === 'string' ? publicKey : (publicKey as PublicKey)?.toBase58() || 'Not connected'}`,
           maxSteps: 5,
         })
 
@@ -350,9 +350,9 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
         const balances = await agent.methods.get_token_balance(agent)
         console.log("SOL Balance:", balances.sol)
         console.log("Token Balances:", balances.tokens)
-      } else if (agent.methods && agent.methods.getBalance) {
-        const solBalance = await agent.methods.getBalance()
-        console.log("SOL Balance via getBalance:", solBalance)
+      } else if (agent.methods && agent.methods.get_balance) {
+        const solBalance = await agent.methods.get_balance(agent)
+        console.log("SOL Balance via get_balance:", solBalance)
       }
     } catch (error) {
       console.error("Error testing agent directly:", error)

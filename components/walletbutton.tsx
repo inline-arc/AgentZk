@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { LogOut } from 'lucide-react';
 import { usePhantom } from '@/chat/walletprovider';
+import { PublicKey } from '@solana/web3.js';
 
 
 export default function WalletButton() {
@@ -20,7 +21,7 @@ export default function WalletButton() {
                   <span className="text-sm">
                     {typeof publicKey === 'string' 
                       ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
-                      : publicKey?.toBase58().slice(0, 4) + '...' + publicKey?.toBase58().slice(-4)}
+                      : (publicKey as unknown as PublicKey)?.toBase58().slice(0, 4) + '...' + (publicKey as unknown as PublicKey)?.toBase58().slice(-4)}
                   </span>
                   <LogOut className="w-4 h-4" />
                 </>
