@@ -29,6 +29,7 @@ import Sidebar from "@/components/sidebar"
 import { ModelDropdown } from "@/components/modeldropdown"
 import ChatInput from "@/components/chatinput"
 import ChatContent from "@/components/chatcontent"
+import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -436,7 +437,7 @@ Your connected wallet: ${typeof publicKey === 'string' ? publicKey : publicKey?.
         {showFileDropArea && (
           <FileDropArea onClose={handleFileDropAreaClose} />
         )}
-        
+        <Analytics/>
       </div>
     </div>
   )
