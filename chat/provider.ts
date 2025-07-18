@@ -23,6 +23,10 @@ const modelMappings: Record<string, string> = {
   "Phi-3 Mini": "microsoft/phi-3-mini-4k-instruct:free",
   "Qwen 1.5 0.5B": "qwen/qwen1.5-0.5b-chat:free",
   "Gemini 2.5 Flash": "google/gemini-2.5-flash",
+  "OpenAI GPT-4": "openai/gpt-4",
+  "Meta llama 4": "meta-llama/llama-4-maverick:free",
+  "Moonshotai kimi": "moonshotai/kimi-k2:free",
+
   // // Default model if none of the above match
   // "default": "mistralai/mistral-7b-instruct:free"
 };

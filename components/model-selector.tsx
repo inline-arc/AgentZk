@@ -68,6 +68,25 @@ const models: ModelType[] = [
     modelId: "google/gemini-2.5-flash",
     free: false
 
+  },
+  {
+    name: "OpenAI GPT-4",
+    capabilities: ["document", "reasoning"],
+    modelId: "openai/gpt-4",
+    //disabled: true, // OpenAI models are not available in the dropdown
+    free: false
+  },
+  {
+    name: "Meta llama 4",
+    capabilities: ["document", "reasoning"],
+    modelId: "meta-llama/llama-4-maverick:free",
+    free: true
+  },
+  {
+    name: "Moonshotai kimi",
+    capabilities: ["vision", "document", "reasoning"],
+    modelId: "moonshotai/kimi-vl-a3b-thinking:free",
+    free: true
   }
 ]
 
