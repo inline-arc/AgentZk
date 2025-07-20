@@ -14,6 +14,8 @@ import { ModelDropdown } from "@/components/modeldropdown"
 import ChatInput from "@/components/chatinput"
 import ChatContent from "@/components/chatcontent"
 import { FileDropArea } from "@/components/file-drop-area"
+import SplashScreen from "@/components/SplashScreen"
+import { AnimatePresence } from "framer-motion"
 import { myProvider } from "@/chat/provider"
 import { getSolanaTools } from "@/agents/tools"
 import { getSystemPrompt } from "@/agents/contextprompt"
@@ -21,6 +23,7 @@ import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false)
   const [selectedModel, setSelectedModel] = useState("Google Gemma 3n")
   const [showFileDropArea, setShowFileDropArea] = useState(false)
@@ -158,65 +161,72 @@ export default function Home() {
   }
 
   const handleFileDropAreaClose = () => setShowFileDropArea(false)
+  const handleSplashFinish = () => setShowSplash(false)
 
   if (!mounted) return null
 
   return (
-    <div className="flex h-screen bg-[#14121a] text-gray-300 overflow-hidden">
-      <Sidebar />
+    <>
+      <AnimatePresence>
+        {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
+      </AnimatePresence>
+      
+      <div className="flex h-screen bg-[#14121a] text-gray-300 overflow-hidden">
+        <Sidebar />
 
-      <div className="flex-1 flex flex-col relative">
-        {sidebarCollapsed && (
-          <button
-            className="absolute top-6 left-6 z-50 text-gray-300 bg-[#2d2936] p-2 rounded-md hover:bg-[#3a3545] transition-colors flex items-center gap-2"
-            onClick={() => setSidebarCollapsed(false)}
-          >
-            <Image src="/images/agentzk-logo.png" alt="Logo" width={28} height={28} />
-            <PanelLeft size={18} />
-          </button>
-        )}
+        <div className="flex-1 flex flex-col relative">
+          {sidebarCollapsed && (
+            <button
+              className="absolute top-6 left-6 z-50 text-gray-300 bg-[#2d2936] p-2 rounded-md hover:bg-[#3a3545] transition-colors flex items-center gap-2"
+              onClick={() => setSidebarCollapsed(false)}
+            >
+              <Image src="/images/agentzk-logo.png" alt="Logo" width={28} height={28} />
+              <PanelLeft size={18} />
+            </button>
+          )}
 
-        <div className="flex justify-end items-center p-4">
-          <button className="ml-4 text-gray-400 hover:text-gray-300">
-            <Settings size={20} />
-          </button>
-          <button className="ml-4 text-gray-400 hover:text-gray-300">
-            <Sun size={20} />
-          </button>
-        </div>
+          <div className="flex justify-end items-center p-4">
+            <button className="ml-4 text-gray-400 hover:text-gray-300">
+              <Settings size={20} />
+            </button>
+            <button className="ml-4 text-gray-400 hover:text-gray-300">
+              <Sun size={20} />
+            </button>
+          </div>
 
-        <ChatContent
-          messages={messages}
-          isLoading={isLoading}
-          chatContainerRef={chatContainerRef}
-          publicKey={publicKey}
-          processingCallback={processingCallback}
-          onSendMessage={handleSendMessage}
-        />
-
-        <div className="sticky bottom-0 z-10">
-          <ChatInput
-            onSend={handleSendMessage}
+          <ChatContent
+            messages={messages}
             isLoading={isLoading}
-            selectedModel={selectedModel}
-            setIsModelSelectorOpen={setIsModelSelectorOpen}
-            isModelSelectorOpen={isModelSelectorOpen}
-            setShowFileDropArea={setShowFileDropArea}
-            modelButtonRef={modelButtonRef}
+            chatContainerRef={chatContainerRef}
+            publicKey={publicKey}
+            processingCallback={processingCallback}
+            onSendMessage={handleSendMessage}
           />
+
+          <div className="sticky bottom-0 z-10">
+            <ChatInput
+              onSend={handleSendMessage}
+              isLoading={isLoading}
+              selectedModel={selectedModel}
+              setIsModelSelectorOpen={setIsModelSelectorOpen}
+              isModelSelectorOpen={isModelSelectorOpen}
+              setShowFileDropArea={setShowFileDropArea}
+              modelButtonRef={modelButtonRef}
+            />
+          </div>
+
+          <ModelDropdown
+            isOpen={isModelSelectorOpen}
+            setIsOpen={setIsModelSelectorOpen}
+            selectedModel={selectedModel}
+            setSelectedModel={setSelectedModel}
+            modelSelectorRef={modelSelectorRef}
+          />
+
+          {showFileDropArea && <FileDropArea onClose={handleFileDropAreaClose} />}
+          <Analytics />
         </div>
-
-        <ModelDropdown
-          isOpen={isModelSelectorOpen}
-          setIsOpen={setIsModelSelectorOpen}
-          selectedModel={selectedModel}
-          setSelectedModel={setSelectedModel}
-          modelSelectorRef={modelSelectorRef}
-        />
-
-        {showFileDropArea && <FileDropArea onClose={handleFileDropAreaClose} />}
-        <Analytics />
       </div>
-    </div>
+    </>
   )
 }

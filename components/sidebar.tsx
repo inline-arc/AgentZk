@@ -79,7 +79,6 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {/* Update the sidebar wallet section */}
             <WalletButton/>
           </motion.div>
         </div>

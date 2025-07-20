@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Plus, Search, Paperclip, CheckCircle, ChevronDown, ArrowUp, Globe, Folder, FolderOpen } from 'lucide-react';
+import { Send, Plus, PackagePlus, Search, Paperclip, CheckCircle, ChevronDown, ArrowUp, Globe, Folder, FolderOpen } from 'lucide-react';
 import { AISuggestions, AISuggestion } from './ai-suggestions';
+import MCPIcon from './ui/mcpicon';
 
 interface ChatInputProps {
   onSend: (message: string) => Promise<void>;
@@ -56,13 +57,7 @@ export default function ChatInput({
     }
   };
 
-  // Limited set of suggestions
-  const suggestions = [
-    "What's my SOL balance?",
-    "Send 0.1 SOL",
-    "Show tokens Balance",
-    "Top Up the Chat"
-  ];
+ 
 
   // Modify the input change handler to track if user has typed
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -96,7 +91,7 @@ export default function ChatInput({
             />
             <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full">
-                <Plus className="h-5 w-5" />
+                <MCPIcon />
               </button>
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full flex items-center gap-1">
                 <Globe className="h-5 w-5" />
