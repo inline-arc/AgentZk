@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Plus, PackagePlus, Search, Paperclip, CheckCircle, ChevronDown, ArrowUp, Globe, Folder, FolderOpen } from 'lucide-react';
 import { AISuggestions, AISuggestion } from './ai-suggestions';
 import MCPIcon from './ui/mcpicon';
+import { MCPDropdownContainer } from '../mcp/mcpcontainer';
 
 interface ChatInputProps {
   onSend: (message: string) => Promise<void>;
@@ -28,6 +29,7 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Add a state to track if user has typed anything
   const [hasTyped, setHasTyped] = useState(false);
+  const [isMCPDropdownOpen, setIsMCPDropdownOpen] = useState(false);
   
   // Auto-resize textarea
   useEffect(() => {
@@ -90,7 +92,10 @@ export default function ChatInput({
               style={{ minHeight: "48px" }}
             />
             <div className="flex items-center gap-1 px-2 py-1 border-t border-[#3a3545]">
-              <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full">
+              <button 
+                className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full"
+                onClick={() => setIsMCPDropdownOpen(!isMCPDropdownOpen)}
+              >
                 <MCPIcon />
               </button>
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full flex items-center gap-1">
@@ -137,6 +142,11 @@ export default function ChatInput({
           </div>
         </div>
       </div>
+      
+      <MCPDropdownContainer 
+        isOpen={isMCPDropdownOpen}
+        setIsOpen={setIsMCPDropdownOpen}
+      />
     </>
   );
 }

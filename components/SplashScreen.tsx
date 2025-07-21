@@ -54,7 +54,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           
           <div className="ml-4">
             <Image 
-              src="/images/agent-zk-text.png" 
+              src="/images/agentzk-title.png" 
               alt="AgentZk"
               sizes='full-width'
               width={250}
@@ -83,15 +83,5 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     </motion.div>
   );
 };
-
-// Add this to your splash screen component file
-// This helps ensure images are available immediately
-export function preloadSplashImages() {
-  const imageLoader = new Image();
-  imageLoader.src = '/images/agentzk-logo.png';
-  
-  const textLoader = new Image();
-  textLoader.src = '/images/agent-zk-text.png';
-}
 
 export default SplashScreen;
