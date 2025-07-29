@@ -1,5 +1,5 @@
 import { MCPDropdown } from './mcp-dropdown';
-import { MCPService, mcpServices } from '../config/mcp-services';
+import { MCPService, mcpServices } from './config/mcp-services';
 
 interface MCPDropdownContainerProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ export const MCPDropdownContainer = ({ isOpen, setIsOpen }: MCPDropdownContainer
     }
     
     const serviceIndex = mcpServices.findIndex(s => s.id === service.id);
-    if (serviceIndex !== -1) {
+    if (serviceIndex !== 0) {
       mcpServices[serviceIndex].isConnected = !mcpServices[serviceIndex].isConnected;
       console.log(`${service.name} ${mcpServices[serviceIndex].isConnected ? 'connected' : 'disconnected'}`);
     }

@@ -1,5 +1,4 @@
-"use client"
-// app/providers.tsx
+"use client";
 
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
@@ -115,12 +114,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
   ], []);
+
+  // Add error handler for wallet operations
+  const onError = useMemo(
+    () => (error: any) => {
+      console.error('Wallet error:', error);
+    },
+    []
+  );
   
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} onError={onError} autoConnect>
         <WalletModalProvider>
-          {children}
+          <PhantomProvider>
+            {children}
+          </PhantomProvider>
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

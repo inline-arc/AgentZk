@@ -125,11 +125,18 @@ export default function ChatInput({
                   <FolderOpen className="h-5 w-5" />
                 </button>
                 <motion.button
-                  className={`p-1.5 rounded-md border ${
-                    input.trim() && !isLoading
-                      ? "text-white bg-purple-600 hover:bg-purple-700 "
-                      : "text-gray-400 bg-[#3a3545] border-[#3a3545]/50"
-                  }`}
+                  initial={false}
+                  variants={{
+                    default: {
+                      padding: "0.375rem",
+                      borderRadius: "0.375rem",
+                      border: "1px solid",
+                      borderColor: input.trim() && !isLoading ? "rgb(124, 58, 237)" : "rgba(58, 53, 69, 0.5)",
+                      backgroundColor: input.trim() && !isLoading ? "rgb(124, 58, 237)" : "rgb(58, 53, 69)",
+                      color: input.trim() && !isLoading ? "white" : "rgb(156, 163, 175)"
+                    }
+                  }}
+                  animate="default"
                   whileHover={input.trim() && !isLoading ? { scale: 1.05 } : {}}
                   whileTap={input.trim() && !isLoading ? { scale: 0.95 } : {}}
                   disabled={!input.trim() || isLoading}

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check, Plus, Crown } from 'lucide-react';
-import { MCPService, mcpServices } from '../config/mcp-services';
+import { MCPService, mcpServices } from '../mcp/config/mcp-services';
 
 interface MCPDropdownProps {
   isOpen: boolean;

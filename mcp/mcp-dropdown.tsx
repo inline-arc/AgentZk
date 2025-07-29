@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Check, Plus } from 'lucide-react';
-import { MCPService, mcpServices } from '../config/mcp-services';
+import { MCPService, mcpServices } from './config/mcp-services';
 
 interface MCPDropdownProps {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export const MCPDropdown = ({
         <p className="text-gray-400 text-xs">Connect to any app integration</p>
       </div>
 
-      <div className="max-h-60 overflow-hidden">
+      <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-gray-800">
         <div className="space-y-0">
           {mcpServices.map(service => (
             <div
@@ -57,14 +57,14 @@ export const MCPDropdown = ({
               <img 
                 src={service.logoUrl} 
                 alt={service.name}
-                className="w-6 h-6 rounded mr-3 flex-shrink-0"
+                className="w-4 h-4 rounded mr-3 flex-shrink-0"
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjNjY2NjY2IiByeD0iNCIvPgo8cGF0aCBkPSJNMTIgN1YxN002IDE0SDE4IiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=';
                 }}
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-white text-sm font-medium truncate">{service.name}</span>
+                  <span className="text-white text-xs font-medium truncate">{service.name}</span>
                   {service.isPro && (
                     <span className="text-xs font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                       PRO

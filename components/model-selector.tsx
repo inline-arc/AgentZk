@@ -41,7 +41,7 @@ const models: ModelType[] = [
   {
     name: "Mythomist 7B",
     capabilities: ["document"],
-    modelId: "gryphe/mythomist-7b:free",
+    modelId: "mistralai/mistral-7b-instruct:free",
     free: true
   },
   {
@@ -77,9 +77,9 @@ const models: ModelType[] = [
     free: false
   },
   {
-    name: "Meta llama 4",
+    name: "Gemini 2.0 Flash",
     capabilities: ["document", "reasoning"],
-    modelId: "meta-llama/llama-4-maverick:free",
+    modelId: "google/gemini-2.0-flash-exp:free",
     free: true
   },
   {
@@ -87,7 +87,19 @@ const models: ModelType[] = [
     capabilities: ["vision", "document", "reasoning"],
     modelId: "moonshotai/kimi-vl-a3b-thinking:free",
     free: true
-  }
+  },
+  {
+    name: "Deepseek v3 0324",
+    capabilities: ["document", "reasoning"],
+    modelId: "deepseek/deepseek-chat-v3-0324:free",
+    free: true
+  },
+  {
+    name: "Qwen3 4B",
+    capabilities: ["document", "reasoning"],
+    modelId: "qwen/qwen3-4b:free",
+    free: true
+  },
 ]
 
 interface ModelSelectorProps {

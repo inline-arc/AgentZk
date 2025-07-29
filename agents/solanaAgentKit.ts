@@ -4,7 +4,7 @@ import { SolanaAgentKit } from "solana-agent-kit"
 import TokenPlugin from "@solana-agent-kit/plugin-token"
 import DeFiPlugin from "@solana-agent-kit/plugin-defi"
 import { Transaction, VersionedTransaction, SendOptions, PublicKey } from "@solana/web3.js"
-import DefiPlugin from "@solana-agent-kit/plugin-defi"
+
 
 export const initSolanaAgent = (phantom: any, publicKey: string | PublicKey) => {
   if (!phantom || !publicKey) throw new Error("Phantom or publicKey missing")
@@ -36,9 +36,7 @@ export const initSolanaAgent = (phantom: any, publicKey: string | PublicKey) => 
     },
     process.env.NEXT_PUBLIC_RPC_URL as string,
     {}
-  )
-    .use(TokenPlugin)
-   
+  ).use(TokenPlugin)
 
   return agent
 }

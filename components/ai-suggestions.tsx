@@ -31,7 +31,7 @@ export const DEFAULT_AI_SUGGESTIONS = [
   'Create a token',
   'What tokens do I own?',
   'Stake SOL to validator',
-  'Swap SOL to USDC',
+  'Swap SOL to USDC using JUP',
   'Show me NFT collections',
   'How to create an SPL token?',
 ];

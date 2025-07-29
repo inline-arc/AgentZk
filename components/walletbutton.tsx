@@ -1,11 +1,12 @@
+"use client";
+
 import { motion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { usePhantom } from '@/chat/walletprovider';
-import { PublicKey } from '@solana/web3.js';
-
 
 export default function WalletButton() {
-  const { phantom, connected, publicKey, connect, disconnect } = usePhantom();
+  const { connected, publicKey, connect, disconnect } = usePhantom();
+  
   return (
     <>
     <div className="mt-auto p-4 flex items-center justify-between text-gray-300 border-t border-[#1a1625]">
@@ -18,9 +19,9 @@ export default function WalletButton() {
             {connected ? (
                 <>
                   <span className="text-sm">
-                    {typeof publicKey === 'string' 
+                    {publicKey 
                       ? `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`
-                      : (publicKey as unknown as PublicKey)?.toBase58().slice(0, 4) + '...' + (publicKey as unknown as PublicKey)?.toBase58().slice(-4)}
+                      : ''}
                   </span>
                   <LogOut className="w-4 h-4" />
                 </>

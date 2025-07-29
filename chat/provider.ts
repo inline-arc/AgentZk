@@ -5,7 +5,7 @@ import {
 } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 
-// Create an OpenAI client with OpenRouter
+
 const openai = createOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     apiKey: process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
@@ -17,7 +17,7 @@ const modelMappings: Record<string, string> = {
   "Mistral 7B Instruct": "mistralai/mistral-7b-instruct:free",
   "Nous Hermes 2 Yi": "nousresearch/nous-hermes-2-yi-9b:free",
   "OpenChat 3.5": "openchat/openchat-3.5:free",
-  "Mythomist 7B": "gryphe/mythomist-7b:free",
+  "Mythomist 7B": "mistralai/mistral-7b-instruct:free",
   "MBLIP": "jondurbin/mblip:free",
   "Llama-3 8B Instruct": "meta-llama/llama-3-8b-instruct:free",
   "Phi-3 Mini": "microsoft/phi-3-mini-4k-instruct:free",
@@ -26,6 +26,8 @@ const modelMappings: Record<string, string> = {
   "OpenAI GPT-4": "openai/gpt-4",
   "Meta llama 4": "meta-llama/llama-4-maverick:free",
   "Moonshotai kimi": "moonshotai/kimi-k2:free",
+  "Qwen3 4B": "qwen/qwen3-4b:free",
+  "Deepseek v3 0324": "deepseek/deepseek-chat-v3-0324:free",
 
   // // Default model if none of the above match
   // "default": "mistralai/mistral-7b-instruct:free"

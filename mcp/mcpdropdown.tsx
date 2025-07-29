@@ -1,5 +1,5 @@
 import { MCPDropdown } from './mcp-dropdown';
-import { MCPService, mcpServices } from '../config/mcp-services';
+import { MCPService, mcpServices } from './config/mcp-services';
 
 interface MCPDropdownContainerProps {
   isOpen: boolean;
