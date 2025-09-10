@@ -1,5 +1,4 @@
 
-
 # AgentZk: Agentic AI Automation
 ![image 1](https://github.com/user-attachments/assets/c6eec09f-3573-49f1-b672-3c38dacd40d9)
 
@@ -9,15 +8,11 @@ Agentic AI Automation to your wallet on Solana Ecosystem with Zk auth and zkLLM 
 
 ---
 
-## Demo  
+## Demo
 <img width="2880" height="1800" alt="Screen Shot 2025-07-18 at 01 11 44" src="https://github.com/user-attachments/assets/e3ef5385-036e-4a8b-b7ef-1f1422900b11" />
-<img width="1280" height="720" alt="Screen Shot 2025-06-27 at 13 08 19" src="https://github.com/user-attachments/assets/4cd86d30-f47b-4480-9bdf-f616fe62958a" />
 <img width="1280" height="720" alt="Screen Shot 2025-07-16 at 12 24 40" src="https://github.com/user-attachments/assets/5499a022-390b-4f7b-8cae-886aae66312b" />
+<img width="2880" height="1800" alt="Screen Shot 2025-07-24 at 12 42 14" src="https://github.com/user-attachments/assets/259ae5b8-4748-48bc-95b5-963e3907b3bd" />
 
-
-AgentZk Platform Demo  
-
-Click the image above to watch a demonstration of the AgentZk platform.  
 
 ---
 
