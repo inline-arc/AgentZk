@@ -4,7 +4,7 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { WalletProvider, ConnectionProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { clusterApiUrl } from '@solana/web3.js';
+import { clusterApiUrl, Transaction } from '@solana/web3.js';
 import { useMemo } from 'react';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { createPhantom } from "@phantom/browser-sdk";
@@ -20,6 +20,8 @@ interface PhantomContextType {
   publicKey: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  signTransaction: (transaction: Transaction) => Promise<Transaction>;
+  signAndSendTransaction: (transaction: Transaction) => Promise<{ signature: string }>;
 }
 
 const PhantomContext = createContext<PhantomContextType>({
@@ -28,6 +30,8 @@ const PhantomContext = createContext<PhantomContextType>({
   publicKey: null,
   connect: async () => {},
   disconnect: async () => {},
+  signTransaction: async () => { throw new Error('Not initialized'); },
+  signAndSendTransaction: async () => { throw new Error('Not initialized'); },
 });
 
 export function PhantomProvider({ children }: { children: ReactNode }) {
@@ -87,8 +91,54 @@ export function PhantomProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signTransaction = async (transaction: Transaction): Promise<Transaction> => {
+    if (!phantom || !connected) throw new Error('Wallet not connected');
+    try {
+      // Serialize the transaction
+      const serializedTransaction = transaction.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false
+      });
+      
+      // Sign the transaction using Phantom
+      const signedSerializedTransaction = await phantom.solana.signTransaction(serializedTransaction);
+      
+      // Deserialize the signed transaction
+      return Transaction.from(signedSerializedTransaction);
+    } catch (error) {
+      console.error("Error signing transaction:", error);
+      throw error;
+    }
+  };
+
+  const signAndSendTransaction = async (transaction: Transaction): Promise<{ signature: string }> => {
+    if (!phantom || !connected) throw new Error('Wallet not connected');
+    try {
+      // Serialize the transaction
+      const serializedTransaction = transaction.serialize({
+        requireAllSignatures: false,
+        verifySignatures: false
+      });
+      
+      // Sign and send the transaction using Phantom
+      const result = await phantom.solana.signAndSendTransaction(serializedTransaction);
+      return { signature: result };
+    } catch (error) {
+      console.error("Error signing and sending transaction:", error);
+      throw error;
+    }
+  };
+
   return (
-    <PhantomContext.Provider value={{ phantom, connected, publicKey, connect, disconnect }}>
+    <PhantomContext.Provider value={{ 
+      phantom, 
+      connected, 
+      publicKey, 
+      connect, 
+      disconnect, 
+      signTransaction,
+      signAndSendTransaction 
+    }}>
       {children}
     </PhantomContext.Provider>
   );
@@ -114,18 +164,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const wallets = useMemo(() => [
     new PhantomWalletAdapter(),
   ], []);
-
-  // Add error handler for wallet operations
-  const onError = useMemo(
-    () => (error: any) => {
-      console.error('Wallet error:', error);
-    },
-    []
-  );
   
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} onError={onError} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <PhantomProvider>
             {children}
