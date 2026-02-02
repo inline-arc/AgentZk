@@ -28,6 +28,7 @@ const modelMappings: Record<string, string> = {
   "Moonshotai kimi": "moonshotai/kimi-k2:free",
   "Qwen3 4B": "qwen/qwen3-4b:free",
   "Deepseek v3 0324": "deepseek/deepseek-chat-v3-0324:free",
+  "openai 120b":"openai/gpt-oss-120b:free"
 
   // // Default model if none of the above match
   // "default": "mistralai/mistral-7b-instruct:free"

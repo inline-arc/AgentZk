@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Eye, Globe, FileText, Brain, ChevronDown, ChevronUp, SlidersHorizontal, Info } from "lucide-react"
 import { motion } from "framer-motion"
 import { updateModelProvider } from "@/chat/provider"
+import { Progress } from "@/components/ui/progress"
 
 type ModelType = {
   name: string
@@ -100,16 +101,25 @@ const models: ModelType[] = [
     modelId: "qwen/qwen3-4b:free",
     free: true
   },
+  {
+    name: "openai 120b",
+    capabilities: ["document", "reasoning"],
+    modelId: "openai/gpt-oss-120b:free",
+    free: true
+  }
 ]
 
 interface ModelSelectorProps {
   onSelect: (model: string) => void
   currentModel: string
+  creditsUsed?: number
+  totalCredits?: number
 }
 
-export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
+export function ModelSelector({ onSelect, currentModel, creditsUsed = 25, totalCredits = 250 }: ModelSelectorProps) {
   const [showAll, setShowAll] = useState(false)
   const [showTooltip, setShowTooltip] = useState<number | null>(null)
+  const [progressValue, setProgressValue] = useState(0)
 
   const displayedModels = showAll ? models : models.slice(0, 5)
 
@@ -127,7 +137,14 @@ export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
       updateModelProvider(defaultModel.name);
       onSelect(defaultModel.name);
     }
-  }, []);  // Only run on mount, not on every currentModel change
+  }, []);
+
+  // Update progress value when credits change
+  useEffect(() => {
+    const creditPercentage = (creditsUsed / totalCredits) * 100
+    const timer = setTimeout(() => setProgressValue(creditPercentage), 500)
+    return () => clearTimeout(timer)
+  }, [creditsUsed, totalCredits])
 
   // Handle model selection with OpenRouter model updating
   const handleModelSelect = (model: ModelType) => {
@@ -142,9 +159,8 @@ export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
 
   return (
     <div className="flex flex-col w-full bg-[#1e1a29]/90 backdrop-blur-md rounded-lg border border-[#3a3545]/50 overflow-hidden">
-
       {/* Pricing Header */}
-      <div className="p-4 border-b border-[#3a3545]">
+      <div className="p-4">
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-white font-semibold text-lg">Unlock all models + higher limits</h3>
@@ -161,6 +177,16 @@ export function ModelSelector({ onSelect, currentModel }: ModelSelectorProps) {
             <span className="relative z-10">Upgrade now</span>
           </motion.button>
         </div>
+      </div>
+
+      {/* Credit Usage Header */}
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm text-gray-400">Free Plan</span>
+          <span className="text-sm text-gray-400">{creditsUsed} / {totalCredits} credits used</span>
+        </div>
+        <Progress value={progressValue} className="w-full" />
+        <p className="text-xs text-gray-500 mt-2">Next free reset: Monday at 5AM (in 5 hours)</p>
       </div>
 
       {/* Models List */}

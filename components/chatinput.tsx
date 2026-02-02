@@ -100,7 +100,7 @@ export default function ChatInput({
               </button>
               <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full flex items-center gap-1">
                 <Globe className="h-5 w-5" />
-                <span className="text-sm">Search</span>
+                <span className="text-sm">Stable</span>
               </button>
               {/* <button className="p-1.5 text-gray-300 hover:bg-[#3a3545] rounded-full border border-[#3a3545]/50 flex items-center gap-1">
                 <CheckCircle className="h-5 w-5" />
