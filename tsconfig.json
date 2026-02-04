@@ -16,6 +16,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "types": ["node", "express-serve-static-core"],
     "plugins": [
       {
         "name": "next"
